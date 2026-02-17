@@ -4,13 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ARTBOARD Archive</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="archive.css">
 </head>
 <body>
+
+<!-- Loader -->
+<div class="loader-wrapper" id="archiveLoader">
+    <div class="loader-text" id="archiveLoaderText">THE ARCHIVE.</div>
+</div>
+
     <div class="header">
         <div class="header-left">
-            <a href="index.html" class="back-link">BACK TO ARTBOARD™</a>
-            <div class="timestamp">23:56:51 GMT+1</div>
+            <a href="index.html" class="back-link">BACK TO HOME</a>
+            <div class="timestamp">23:56:51 GMT+4</div>
         </div>
         <div class="header-center">
             <div class="archive-text">
@@ -33,37 +40,22 @@
             <ul class="project-list">
                 <li class="project-item">
                     <span class="project-number">(001)</span>
-                    <span class="project-name">RETRONOVA</span>
+                    <span class="project-name">Traditional Art</span>
                     <span class="see-case">SEE CASE</span>
                 </li>
                 <li class="project-item">
                     <span class="project-number">(002)</span>
-                    <span class="project-name">NICOLA ROMEI</span>
+                    <span class="project-name">Digital Art</span>
                     <span class="see-case">SEE CASE</span>
                 </li>
                 <li class="project-item">
                     <span class="project-number">(003)</span>
-                    <span class="project-name">CREATIVE LEAP</span>
+                    <span class="project-name">Posters</span>
                     <span class="see-case">SEE CASE</span>
                 </li>
                 <li class="project-item">
                     <span class="project-number">(004)</span>
                     <span class="project-name">MADE IN EVOLVE</span>
-                    <span class="see-case">SEE CASE</span>
-                </li>
-                <li class="project-item">
-                    <span class="project-number">(005)</span>
-                    <span class="project-name active">VALSAVARENCHE</span>
-                    <span class="see-case">SEE CASE</span>
-                </li>
-                <li class="project-item">
-                    <span class="project-number">(006)</span>
-                    <span class="project-name">DAVIDE CATTANEO</span>
-                    <span class="see-case">SEE CASE</span>
-                </li>
-                <li class="project-item">
-                    <span class="project-number">(007)</span>
-                    <span class="project-name">STUDIES IN FORM</span>
                     <span class="see-case">SEE CASE</span>
                 </li>
             </ul>
@@ -84,7 +76,7 @@
         <div class="right-sidebar">
             <div class="sidebar-title">THIS SPACE HOLDS<br>PROJECTS<br>TESTS<br>VISUAL SYSTEMS</div>
             <div class="thumbnail-grid">
-                <div class="thumbnail" data-index="0">
+                <div class="thumbnail active" data-index="0">
                     <img src="pictures/download (52).jpg" alt="Thumb 1">
                 </div>
                 <div class="thumbnail" data-index="1">
@@ -96,7 +88,7 @@
                 <div class="thumbnail" data-index="3">
                     <img src="https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=200&q=80" alt="Thumb 4">
                 </div>
-                <div class="thumbnail active" data-index="4">
+                <div class="thumbnail" data-index="4">
                     <img src="https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=200&q=80" alt="Thumb 5">
                 </div>
                 <div class="thumbnail" data-index="5">
@@ -109,12 +101,9 @@
         </div>
     </div>
 
-    <div class="footer">
-        <span class="footer-link">LATEST WORKS</span>
-        <span class="footer-link active">GALLERY</span>
-        <span class="footer-link">LIST</span>
-        <span class="footer-link">ARCHIVE 2025©</span>
-    </div>
+<div class="custom-cursor">
+    <div class="cursor-text">SCROLL OR CLICK CASE</div>
+</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
