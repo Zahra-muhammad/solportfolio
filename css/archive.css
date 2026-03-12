@@ -150,6 +150,18 @@ body::after {
     left: 20px;
 }
 
+/* ==================== CASES LABEL ==================== */
+.cases-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #000;
+    margin-bottom: 14px;
+    line-height: 1;
+}
+
+/* ==================== PROJECT LIST ==================== */
 .project-list { list-style: none; }
 
 .project-item {

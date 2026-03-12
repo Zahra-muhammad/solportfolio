@@ -282,17 +282,17 @@ document.addEventListener('mousemove', (e) => {
     });
 });
 
-// Elements that trigger circle mode
+// Hide cursor entirely on interactive elements, restore on leave
 const interactiveElements = document.querySelectorAll(
     '.project-item, .thumbnail, a'
 );
 
 interactiveElements.forEach(el => {
     el.addEventListener('mouseenter', () => {
-        cursor.classList.add('circle');
+        gsap.to(cursor, { opacity: 0, duration: 0.2, ease: "power2.out" });
     });
 
     el.addEventListener('mouseleave', () => {
-        cursor.classList.remove('circle');
+        gsap.to(cursor, { opacity: 1, duration: 0.2, ease: "power2.out" });
     });
 });

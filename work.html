@@ -11,63 +11,159 @@
   <link rel="stylesheet" href="css/works.css">
 </head>
 <body>
-  <canvas id="noiseCanvas"></canvas>
-  <div class="cursor-dot" id="cursorDot"></div>
 
+  <!-- Noise overlay -->
+  <canvas id="noiseCanvas"></canvas>
+
+  <!-- Cursors -->
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div id="scrollCursor">Scroll</div>
+  <div class="cursor-scroll-ring" id="cursorScrollRing">
+    <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <path id="circlePath" d="M 36,36 m -26,0 a 26,26 0 1,1 52,0 a 26,26 0 1,1 -52,0"/>
+      </defs>
+      <circle cx="36" cy="36" r="28" stroke="rgba(240,237,232,0.18)" stroke-width="0.75"/>
+      <circle class="ring-dot" cx="36" cy="10" r="2"/>
+      <text>
+        <textPath class="ring-text" href="#circlePath" startOffset="0%">
+          SCROLL · SCROLL · SCROLL · SCROLL ·
+        </textPath>
+      </text>
+    </svg>
+  </div>
+
+  <!-- Intro -->
   <div class="intro-overlay" id="introOverlay">
     <div class="intro-text" id="introText">The Work</div>
   </div>
 
+  <!-- Edge fades -->
   <div class="edge-fade-top"></div>
   <div class="edge-fade-bottom"></div>
 
+  <!-- Grid header -->
   <header id="gridHeader">
-    <div class="header-left"><a href="index.html"><span class="back-arrow">&#8592;</span> Back to Artboard</a></div>
-    <div class="header-center">
-      <div id="counterWrap"><div class="counter-main" id="counterMain">001</div></div>
-      <div class="counter-sub">006</div>
+    <div class="header-left">
+      <a href="index.html" style="cursor:none;">
+        <span class="back-arrow">&#8592;</span>Back to Home
+      </a>
     </div>
-    <div class="header-right">List</div>
+    <div class="header-center"></div>
+    <div class="header-right">
+      <div id="counterWrap">
+        <div class="counter-main" id="counterMain">001</div>
+      </div>
+      <div class="counter-sub">003</div>
+    </div>
   </header>
 
+  <!-- Category Nav — left center, no "All" -->
+  <nav id="categoryNav">
+    <div class="cat-item active" data-category="websites">
+      <div class="cat-tick"></div>
+      <div class="cat-label">Websites</div>
+    </div>
+    <div class="cat-item" data-category="sketches">
+      <div class="cat-tick"></div>
+      <div class="cat-label">Sketches</div>
+    </div>
+    <div class="cat-item" data-category="posters">
+      <div class="cat-tick"></div>
+      <div class="cat-label">Posters</div>
+    </div>
+    <div class="cat-item" data-category="other">
+      <div class="cat-tick"></div>
+      <div class="cat-label">Other</div>
+    </div>
+  </nav>
+
+  <!-- Nav arrows -->
   <div id="navArrows">
-    <div class="nav-arrow" id="arrowUp"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg></div>
-    <div class="nav-arrow" id="arrowDown"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+    <div class="nav-arrow" id="arrowUp">
+      <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+    </div>
+    <div class="nav-arrow" id="arrowDown">
+      <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
   </div>
 
+  <!-- Fullscreen header -->
   <div id="fullHeader">
     <button class="full-btn" id="btnGrid">&#8592; Grid</button>
     <div id="fullTitle">Project I</div>
     <button class="full-btn" id="btnInfo">Info</button>
   </div>
 
+  <!-- Gallery -->
   <div class="gallery-wrapper">
     <div class="gallery-track" id="galleryTrack"></div>
   </div>
 
+  <!-- Progress bar -->
   <div class="progress-bar" id="progressBar"></div>
+
+  <!-- Zoom clone -->
   <div id="zoomClone"><div id="zoomCloneInner"></div></div>
 
+  <!-- Category flash label -->
+  <div id="catFlash"></div>
+
+  <!-- Fullscreen view -->
   <div id="fullscreen">
     <div id="fullBg"></div>
+    <div id="colorTint"></div>
+    <div id="videoProgress">
+      <div id="videoProgressFill"></div>
+    </div>
     <div id="fullMeta">
-      <div class="proj-num" id="fsNum">001 / 006</div>
+      <div class="proj-num" id="fsNum">001 / 003</div>
       <div class="proj-name" id="fsName">Project I</div>
+    </div>
+    <div id="scrollHint">
+      <div class="scroll-line"></div>
+      <span>Tap for sound</span>
+    </div>
+
+    <!-- Image title — top center, image mode only -->
+    <div id="imgTitle"></div>
+
+    <!-- Zoom controls — only 2 buttons: zoom in + zoom out -->
+    <div id="zoomControls">
+      <button class="zoom-btn" id="zoomInBtn" title="Zoom in">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="15.65" y2="15.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+      </button>
+      <button class="zoom-btn" id="zoomOutBtn" title="Zoom out">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="15.65" y2="15.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+      </button>
     </div>
   </div>
 
+  <!-- Info panel -->
   <div id="infoPanel">
     <button id="infoPanelClose">&#10005; Close</button>
-    <span class="info-index" id="infoIndex">001 / 006</span>
+    <span class="info-index" id="infoIndex">001 / 003</span>
     <div class="info-title" id="infoTitle">Project I</div>
     <div class="info-divider"></div>
     <p class="info-desc" id="infoDesc"></p>
     <div class="info-tags" id="infoTags"></div>
     <div class="info-meta-grid">
-      <div class="info-meta-item"><div class="meta-label">Year</div><div class="meta-val" id="infoYear"></div></div>
-      <div class="info-meta-item"><div class="meta-label">Client</div><div class="meta-val" id="infoClient"></div></div>
-      <div class="info-meta-item"><div class="meta-label">Category</div><div class="meta-val" id="infoCategory"></div></div>
-      <div class="info-meta-item"><div class="meta-label">Duration</div><div class="meta-val" id="infoDuration"></div></div>
+      <div class="info-meta-item">
+        <div class="meta-label">Year</div>
+        <div class="meta-val" id="infoYear"></div>
+      </div>
+      <div class="info-meta-item">
+        <div class="meta-label">Client</div>
+        <div class="meta-val" id="infoClient"></div>
+      </div>
+      <div class="info-meta-item">
+        <div class="meta-label">Category</div>
+        <div class="meta-val" id="infoCategory"></div>
+      </div>
+      <div class="info-meta-item">
+        <div class="meta-label">Duration</div>
+        <div class="meta-val" id="infoDuration"></div>
+      </div>
     </div>
   </div>
 
