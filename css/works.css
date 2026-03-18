@@ -2,26 +2,52 @@
    GALLERY — styles
    ══════════════════════════════════════ */
 
+
+/* ─── RESET & CUSTOM PROPERTIES ─────────────────────────────────────────────
+   Universal box-sizing reset prevents padding/border from adding to element dimensions.
+   --page-bg is a dynamic CSS variable updated by JS as the dominant colour changes —
+   it's used by the edge fades so they always blend into the current background. */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --white: #f0ede8; --black: #080808; --gray: #555; --page-bg: #080808; }
+
+:root {
+  --white:   #f0ede8;    /* Warm off-white — used for all text and UI elements */
+  --black:   #080808;    /* Near-black page background */
+  --gray:    #555;       /* Mid-grey (reserved, not heavily used) */
+  --page-bg: #080808;    /* Default background; updated by JS getDominantColor */
+}
 
 html, body {
   width: 100%; height: 100%;
   background: var(--page-bg);
-  transition: background 1s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 1s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth colour shift as project changes */
   color: var(--white);
   font-family: 'DM Sans', sans-serif;
-  overflow: hidden; cursor: none;
+  overflow: hidden; /* No native scroll — all movement is driven by JS */
+  cursor: none;     /* Hide OS cursor; replaced by custom cursor elements */
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Noise ── */
+
+/* ─── NOISE CANVAS ───────────────────────────────────────────────────────────
+   The noise canvas covers the entire viewport as a fixed overlay.
+   Very low opacity (0.03) makes the grain barely perceptible but adds texture.
+   pointer-events: none ensures it doesn't intercept any mouse interactions. */
 #noiseCanvas {
   position: fixed; inset: 0; width: 100%; height: 100%;
   pointer-events: none; z-index: 9999; opacity: 0.03;
 }
 
-/* ── Cursor ── */
+
+/* ─── CUSTOM CURSOR ──────────────────────────────────────────────────────────
+   .cursor-dot: the primary 8px white dot tracking the mouse position.
+   mix-blend-mode: difference inverts the colour under the cursor so it remains
+   visible on both light and dark surfaces.
+
+   .cursor-scroll-ring: a 72×72 SVG ring that trails behind the dot (slower GSAP).
+   Contains rotating "SCROLL · SCROLL ·" text; shown only on the gallery grid
+   (opacity controlled via CSS body class flags set by JS).
+
+   Both elements start at top:0 left:0 and are positioned via GSAP x/y transforms. */
 .cursor-dot {
   position: fixed; width: 8px; height: 8px;
   background: var(--white); border-radius: 50%;
@@ -30,13 +56,17 @@ html, body {
   mix-blend-mode: difference; will-change: transform, width, height;
   transition: opacity 0.3s;
 }
+
 .cursor-scroll-ring {
   position: fixed; width: 72px; height: 72px;
   pointer-events: none; z-index: 99998;
   left: 0; top: 0; transform: translate(-50%, -50%);
   opacity: 0; transition: opacity 0.35s; will-change: transform;
 }
+
+/* The entire SVG rotates continuously so the text and dot orbit the centre */
 .cursor-scroll-ring svg { width: 100%; height: 100%; animation: rotateRing 5s linear infinite; }
+
 .cursor-scroll-ring .ring-text {
   fill: var(--white); font-size: 7.5px; font-family: 'DM Sans', sans-serif;
   font-weight: 300; letter-spacing: 3.2px; text-transform: uppercase;
@@ -48,6 +78,10 @@ html, body {
   to   { transform: rotate(360deg); }
 }
 
+/* ── Cursor visibility rules per fullscreen mode ──
+   In video fullscreen: hide both cursor elements (the scroll text label takes over).
+   In image fullscreen: show the dot (for drag/zoom feedback), hide the ring.
+   The fullTitle and fullMeta elements are also hidden here via body class flags. */
 body.fullscreen-open.fullscreen-video .cursor-dot         { opacity: 0; }
 body.fullscreen-open.fullscreen-video .cursor-scroll-ring { opacity: 0; }
 body.fullscreen-open.fullscreen-image .cursor-dot         { opacity: 1; }
@@ -56,13 +90,19 @@ body.fullscreen-open.fullscreen-image #fullTitle          { display: none; }
 body.fullscreen-open.fullscreen-video #fullTitle          { display: none; }
 body.fullscreen-open.fullscreen-video #fullMeta           { display: none !important; }
 
-/* ── Grid Header ── */
+
+/* ─── GRID HEADER ────────────────────────────────────────────────────────────
+   Fixed top bar visible in gallery (grid) mode only.
+   Uses mix-blend-mode: difference so it reads on both dark and light backgrounds.
+   Starts at opacity: 0 and is revealed by the GSAP intro timeline. */
 #gridHeader {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   display: flex; align-items: flex-start; justify-content: space-between;
   padding: 34px 44px 0; pointer-events: none; opacity: 0;
   mix-blend-mode: difference;
 }
+
+/* Back-to-home link: uppercase, spaced, with an animated back arrow */
 .header-left a {
   font-size: 10px; font-weight: 300; letter-spacing: .15em;
   color: var(--white); text-decoration: none; text-transform: uppercase;
@@ -70,9 +110,12 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
   display: flex; align-items: center; gap: 10px; opacity: 0.75;
 }
 .header-left a:hover { opacity: 1; }
+
+/* Back arrow slides left 5px on hover for a directional micro-interaction */
 .back-arrow { display: inline-block; transition: transform .4s cubic-bezier(.25,1,.5,1); }
 .header-left a:hover .back-arrow { transform: translateX(-5px); }
 
+/* Counter display: large Bebas Neue number + small total beneath */
 .header-right {
   display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
   pointer-events: none;
@@ -87,13 +130,19 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
   color: var(--white); text-transform: uppercase; margin-top: 2px; opacity: 0.5;
 }
 
-/* ── Fullscreen Header ── */
+
+/* ─── FULLSCREEN HEADER ──────────────────────────────────────────────────────
+   Replaces gridHeader when a project is opened in fullscreen.
+   Same layout as gridHeader but with ghost buttons instead of the counter.
+   z-index 10100 places it above the fullscreen overlay (z-index 10000). */
 #fullHeader {
   position: fixed; top: 0; left: 0; right: 0; z-index: 10100;
   display: flex; align-items: flex-start; justify-content: space-between;
   padding: 34px 44px 0; pointer-events: none; opacity: 0;
   mix-blend-mode: difference;
 }
+
+/* Minimal ghost buttons: no background/border, uppercase text */
 .full-btn {
   font-size: 10px; font-weight: 300; letter-spacing: .15em;
   color: var(--white); text-transform: uppercase;
@@ -101,18 +150,24 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
   background: none; border: none; font-family: 'DM Sans', sans-serif; opacity: 0.65;
 }
 .full-btn:hover { opacity: 1; }
+
 #fullTitle {
   font-family: 'Bebas Neue', sans-serif; font-size: 26px;
   letter-spacing: .12em; color: var(--white); text-align: center;
 }
 
-/* ── Nav Arrows ── */
+
+/* ─── NAVIGATION ARROWS ──────────────────────────────────────────────────────
+   Up/down circular arrow buttons on the right edge of the screen.
+   Position: fixed, vertically centred.
+   Starts at opacity: 0, enabled after the intro sequence completes. */
 #navArrows {
   position: fixed; right: 44px; top: 50%; z-index: 200;
   transform: translateY(-50%);
   display: flex; flex-direction: column; align-items: center; gap: 14px;
   opacity: 0; pointer-events: none; mix-blend-mode: difference;
 }
+
 .nav-arrow {
   width: 38px; height: 38px;
   display: flex; align-items: center; justify-content: center;
@@ -121,20 +176,32 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
   transition: border-color .3s, background .3s; background: transparent;
 }
 .nav-arrow:hover { border-color: rgba(240,237,232,0.9); background: rgba(240,237,232,0.12); }
+
+/* Chevron SVG icons: drawn with stroke, no fill */
 .nav-arrow svg {
   width: 12px; height: 12px; stroke: rgba(240,237,232,0.7); stroke-width: 1.5;
   fill: none; stroke-linecap: round; stroke-linejoin: round; transition: stroke .3s;
 }
 .nav-arrow:hover svg { stroke: var(--white); }
 
-/* ── Progress Bar ── */
+
+/* ─── PROGRESS BAR ───────────────────────────────────────────────────────────
+   1px wide vertical line on the far right edge.
+   JS sets the height as a percentage: (currentIndex + 1) / total * 100 */
 .progress-bar {
   position: fixed; right: 0; top: 0; width: 1px;
   background: rgba(240,237,232,0.18); z-index: 100; height: 0%;
   transition: height 0.6s ease; mix-blend-mode: difference;
 }
 
-/* ── Category Nav — Websites / Sketches / Other only ── */
+
+/* ─── CATEGORY NAV ───────────────────────────────────────────────────────────
+   Left-side vertical list of category options (Websites / Sketches / Other).
+   Each .cat-item has:
+   - .cat-tick:  an animated short horizontal line (grows on hover/active)
+   - .cat-label: dimmed text that brightens on active
+
+   JS adds/removes the .active class when a category is selected. */
 #categoryNav {
   position: fixed; left: 44px; top: 50%;
   transform: translateY(-50%);
@@ -142,10 +209,13 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
   opacity: 0; pointer-events: none; mix-blend-mode: difference;
 }
+
 .cat-item {
   display: flex; align-items: center; gap: 12px;
   padding: 8px 0; cursor: none; pointer-events: all;
 }
+
+/* The tick line grows from 16px to 26px on hover, 30px when active */
 .cat-tick {
   width: 16px; height: 1px; background: rgba(240,237,232,0.18);
   transition: width .4s cubic-bezier(.25,1,.5,1), background .4s ease; flex-shrink: 0;
@@ -156,10 +226,18 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
 }
 .cat-item:hover .cat-label { color: rgba(240,237,232,0.6); }
 .cat-item:hover .cat-tick  { width: 26px; background: rgba(240,237,232,0.38); }
-.cat-item.active .cat-label { color: var(--white); }
+.cat-item.active .cat-label { color: var(--white); }   /* Full brightness for active */
 .cat-item.active .cat-tick  { width: 30px; background: var(--white); }
 
-/* ── Gallery ── */
+
+/* ─── GALLERY WRAPPER & TRACK ────────────────────────────────────────────────
+   .gallery-wrapper: full-viewport fixed container, centred.
+   .gallery-track:   a flex column of all .video-item cards, moved by GSAP on scroll.
+   The track holds SETS × n items (5 copies of each project) to allow
+   continuous scrolling without ever running out of cards.
+
+   will-change: transform hints to the browser to GPU-composite the track,
+   enabling smoother animations via requestAnimationFrame. */
 .gallery-wrapper {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   display: flex; justify-content: center; align-items: flex-start; z-index: 10;
@@ -168,24 +246,36 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
   display: flex; flex-direction: column; align-items: center;
   flex-shrink: 0; will-change: transform; position: relative;
 }
+
+/* Each card: 52vw wide × 58vh tall, with no overflow (clips image edges) */
 .video-item {
   flex: none; width: 52vw; height: 58vh;
   position: relative; overflow: hidden;
   margin: 6px 0; cursor: none;
   transform-origin: center center; will-change: transform;
 }
+
+/* .video-inner is oversized (112% × 112%) and inset by -6%.
+   This creates a parallax "crop" that lets the image shift slightly
+   without revealing the card edges during scale animations. */
 .video-inner {
   position: absolute; inset: -6%; width: 112%; height: 112%; will-change: transform;
 }
+
+/* Thumbnail image fills the inner container with object-fit: cover */
 .video-thumb {
   position: absolute; inset: 0;
   width: 100%; height: 100%; object-fit: cover; display: block;
   transition: opacity .4s ease;
 }
+
 .video-item video,
 .video-placeholder {
   width: 100%; height: 100%; object-fit: cover; display: block; transition: none;
 }
+
+/* Fallback placeholder when no thumbnail is available.
+   Shows a very faint project ID number for identification. */
 .video-placeholder {
   background: #111;
   display: flex; align-items: center; justify-content: center;
@@ -193,11 +283,16 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
   font-size: 110px; color: rgba(255,255,255,0.04);
   letter-spacing: .1em; user-select: none;
 }
+
+/* Subtle bottom gradient over each card to darken the lower edge
+   and ensure the label text is always legible */
 .video-item::after {
   content: ''; position: absolute; inset: 0;
   background: linear-gradient(to bottom, transparent 60%, rgba(8,8,8,0.45));
   pointer-events: none; z-index: 1;
 }
+
+/* Project label: shown at the bottom-left of each card, slides up on hover */
 .video-label {
   position: absolute; bottom: 18px; left: 22px; z-index: 2;
   font-size: 8.5px; letter-spacing: .22em; text-transform: uppercase;
@@ -206,6 +301,8 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
   transition: opacity .45s ease, transform .45s ease;
 }
 .video-item:hover .video-label { opacity: 1; transform: translateY(0); }
+
+/* "View" hint: centred over the card, appears on hover */
 .video-item .click-hint {
   position: absolute; inset: 0; z-index: 3;
   display: flex; align-items: center; justify-content: center;
@@ -216,28 +313,42 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
   font-size: 8px; letter-spacing: .3em; text-transform: uppercase;
   color: rgba(240,237,232,0.5); font-weight: 300;
   border: 1px solid rgba(240,237,232,0.2); padding: 10px 20px;
-  mix-blend-mode: difference;
+  mix-blend-mode: difference; /* Inverts colour against whatever's beneath */
 }
 
-/* ── Category flash label ── */
+
+/* ─── CATEGORY FLASH LABEL ───────────────────────────────────────────────────
+   Full-screen centred text displayed during category transitions.
+   Populated with scrambled glitch characters by JS, then resolved to the
+   category name (e.g. "WEBSITES", "SKETCHES", "OTHER").
+   Starts at opacity: 0 and is managed entirely by GSAP. */
 #catFlash {
   position: fixed; left: 50%; top: 50%;
   transform: translate(-50%, -50%);
   z-index: 9998;
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(60px, 12vw, 160px);
+  font-size: clamp(60px, 12vw, 160px); /* Fluid: min 60px, preferred 12vw, max 160px */
   letter-spacing: .08em; color: var(--white);
   pointer-events: none; opacity: 0; white-space: nowrap;
   will-change: transform, filter, opacity;
   mix-blend-mode: difference;
 }
+
+/* Each letter of the scramble animation is a <span class="glitch-letter">.
+   JS cycles random characters before adding 'resolved' to lock the final letter. */
 .glitch-letter {
   display: inline-block; color: var(--white);
   transition: color 0.05s; will-change: color;
 }
 .glitch-letter.resolved { color: var(--white) !important; }
 
-/* ── Edge Fades ── */
+
+/* ─── EDGE FADES ─────────────────────────────────────────────────────────────
+   Gradient overlays at the top and bottom of the viewport.
+   They use var(--page-bg) so their fade-to colour always matches the current
+   page background (which changes as projects change).
+   This makes gallery cards appear to smoothly dissolve in/out of the background
+   rather than being clipped by the viewport edge. */
 .edge-fade-top,
 .edge-fade-bottom {
   position: fixed; left: 0; width: 100%; height: 160px;
@@ -254,7 +365,12 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
   transition: background 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Zoom Clone ── */
+
+/* ─── ZOOM CLONE ─────────────────────────────────────────────────────────────
+   A hidden element used as the visual origin for the fullscreen open animation.
+   Positioned and sized by JS to match the active gallery card's bounding rect,
+   then scaled up as part of the expansion transition.
+   display: none by default; JS shows/hides it as needed. */
 #zoomClone {
   position: fixed; z-index: 9998; pointer-events: none;
   display: none; overflow: hidden; will-change: left, top, width, height;
@@ -267,26 +383,42 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
   background-size: cover; background-position: center;
 }
 
-/* ── Fullscreen ── */
+
+/* ─── FULLSCREEN OVERLAY ─────────────────────────────────────────────────────
+   Covers the entire viewport when a project is opened.
+   Starts at opacity: 0 with pointer-events: none; GSAP reveals it.
+   .active class (added by JS) enables pointer interactions.
+
+   #fullBg fills the overlay with the project video or image.
+   #fullBg::after applies a dark translucent overlay over videos to improve
+   text readability for the project name and metadata.
+   .image-mode disables the overlay (sketches should show without darkening). */
 #fullscreen {
   position: fixed; inset: 0; z-index: 10000;
   background: var(--black); opacity: 0; pointer-events: none;
   transition: background 1s ease;
 }
 #fullscreen.active { pointer-events: all; }
+
 #fullBg { position: absolute; inset: 0; overflow: hidden; }
 #fullBg .fs-placeholder,
 #fullBg video { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Placeholder shown when a project has no video source */
 #fullBg .fs-placeholder {
   display: flex; align-items: center; justify-content: center;
   font-family: 'Bebas Neue', sans-serif;
   font-size: clamp(100px, 20vw, 260px);
   color: rgba(255,255,255,0.03); letter-spacing: .12em; user-select: none;
 }
+
+/* Darkening veil over videos (not images) */
 #fullBg::after {
   content: ''; position: absolute; inset: 0;
   background: rgba(0,0,0,0.35); pointer-events: none; z-index: 1;
 }
+
+/* Image mode: dark background, no gradient overlay */
 #fullBg.image-mode { background: #080808; }
 #fullBg.image-mode::after  { display: none; }
 #fullBg.image-mode::before { display: none; }
@@ -296,11 +428,14 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
   will-change: transform; transform-origin: center center;
 }
 
+/* Colour tint layer: mix-blend-mode:color adds the project's dominant hue
+   without affecting brightness — a subtle atmospheric effect */
 #colorTint {
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
   mix-blend-mode: color; opacity: 0.4; transition: background 1.2s ease;
 }
 
+/* Project metadata block (lower-left, video mode only) */
 #fullMeta {
   position: absolute; bottom: 44px; left: 48px; z-index: 5;
   opacity: 0; transform: translateY(12px); mix-blend-mode: difference;
@@ -315,12 +450,15 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
   line-height: 1; color: var(--white);
 }
 
+/* Interaction hint block (lower-right) */
 #scrollHint {
   position: absolute; bottom: 44px; right: 48px; z-index: 5;
   opacity: 0; transform: translateY(8px);
   display: flex; flex-direction: column; align-items: center; gap: 10px;
   mix-blend-mode: difference;
 }
+
+/* Pulsing vertical line above the hint text */
 .scroll-line {
   width: 1px; height: 40px;
   background: linear-gradient(to bottom, transparent, rgba(240,237,232,0.4));
@@ -335,6 +473,8 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
   color: var(--white); font-weight: 300; opacity: 0.35;
 }
 
+/* Thin video progress scrubber at the very bottom of fullscreen.
+   JS updates #videoProgressFill width each rAF frame. */
 #videoProgress {
   position: absolute; bottom: 0; left: 0; right: 0; height: 2px; z-index: 10;
   background: rgba(255,255,255,0.08);
@@ -344,6 +484,8 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
   background: rgba(240,237,232,0.5); transition: width 0.08s linear;
 }
 
+/* "Scroll" text cursor shown only in video fullscreen mode.
+   Positioned by JS GSAP.set() to follow the mouse exactly (no lag). */
 #scrollCursor {
   position: fixed; pointer-events: none; z-index: 99999;
   left: 0; top: 0; transform: translate(-50%, -50%);
@@ -354,7 +496,12 @@ body.fullscreen-open.fullscreen-video #fullMeta           { display: none !impor
 }
 body.fullscreen-open.fullscreen-video #scrollCursor { opacity: 1; }
 
-/* ── Image title (top center, sketch fullscreen only) ── */
+
+/* ─── IMAGE TITLE (sketch fullscreen) ───────────────────────────────────────
+   Displayed at the top-centre of the screen in image/sketch fullscreen mode.
+   Hidden in video mode via JS (fullscreen body class flags).
+   Starts at opacity 0 and is faded in by GSAP after the image loads.
+   mix-blend-mode: difference keeps it readable over the image content. */
 #imgTitle {
   position: absolute; top: 34px; left: 50%;
   transform: translateX(-50%);
@@ -363,33 +510,43 @@ body.fullscreen-open.fullscreen-video #scrollCursor { opacity: 1; }
   font-size: clamp(18px, 2.5vw, 32px); letter-spacing: .12em;
   color: var(--white); text-align: center; white-space: nowrap;
   opacity: 0; pointer-events: none; mix-blend-mode: difference;
-  transform: translateX(-50%) translateY(-4px);
+  transform: translateX(-50%) translateY(-4px); /* Slight upward starting offset for GSAP */
 }
 
-/* ── Zoom Controls ── */
+
+/* ─── ZOOM CONTROLS ──────────────────────────────────────────────────────────
+   Zoom-in / zoom-out circular buttons on the left side of the screen.
+   Visible and interactive only in image/sketch fullscreen mode.
+   Opacity is animated in by GSAP after the image loads; disabled otherwise. */
 #zoomControls {
   position: absolute; left: 44px; top: 50%;
   transform: translateY(-50%); z-index: 10;
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   opacity: 0; pointer-events: none; mix-blend-mode: difference;
 }
+
 .zoom-btn {
   width: 38px; height: 38px;
   display: flex; align-items: center; justify-content: center;
   border: 1px solid rgba(240,237,232,0.3); border-radius: 50%;
-  background: rgba(8,8,8,0.4); backdrop-filter: blur(8px);
+  background: rgba(8,8,8,0.4); backdrop-filter: blur(8px); /* Frosted glass look */
   cursor: pointer; pointer-events: all;
   transition: border-color .3s, background .3s; padding: 0;
 }
 .zoom-btn:hover {
   border-color: rgba(240,237,232,0.9); background: rgba(240,237,232,0.12);
 }
+/* Magnifier SVG icons drawn with stroke only */
 .zoom-btn svg {
   width: 14px; height: 14px; stroke: rgba(240,237,232,0.8);
   stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round;
 }
 
-/* ── Section Header Dividers (Other category) ── */
+
+/* ─── SECTION HEADER DIVIDERS ────────────────────────────────────────────────
+   Rendered in the 'Other' category between sub-groups (Figma / Android Studio / Unity).
+   Positioned absolutely in the gallery track by JS (positionSectionHeaders).
+   ::before adds a short left rule; ::after adds a long right rule extending to the edge. */
 .section-header-divider {
   display: flex; align-items: center; gap: 16px;
   height: 36px; font-size: 8px; letter-spacing: .32em;
@@ -405,13 +562,26 @@ body.fullscreen-open.fullscreen-video #scrollCursor { opacity: 1; }
   content: ''; flex: 1; height: 1px; background: rgba(240,237,232,0.08);
 }
 
-/* ── Info Panel ── */
+
+/* ─── INFO PANEL ─────────────────────────────────────────────────────────────
+   Slides in from the right (translates from x: 100% to x: 0).
+   Width capped at 420px, full height, semi-transparent with heavy blur backdrop.
+   Custom scrollbar is hidden (scrollbar-width: none) to maintain clean aesthetics.
+
+   Internal structure:
+   - info-index:      small counter text
+   - info-title:      large Bebas Neue project name
+   - info-divider:    short horizontal rule
+   - info-desc:       description paragraph
+   - info-tags:       flex-wrapped tag pills
+   - info-links-wrap: external link buttons (hidden if empty)
+   - info-meta-grid:  2×2 metadata grid */
 #infoPanel {
   position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100vw);
   background: rgba(10,10,10,0.97);
   backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
   border-left: 1px solid rgba(240,237,232,0.07);
-  z-index: 10200; transform: translateX(100%);
+  z-index: 10200; transform: translateX(100%); /* Starts off-screen */
   overflow-y: auto; padding: 100px 48px 60px;
   scrollbar-width: none; cursor: none;
 }
@@ -428,6 +598,8 @@ body.fullscreen-open.fullscreen-video #scrollCursor { opacity: 1; }
 }
 .info-divider { width: 32px; height: 1px; background: rgba(240,237,232,0.2); margin-bottom: 32px; }
 .info-desc { font-size: 13px; line-height: 1.8; font-weight: 300; color: rgba(240,237,232,0.6); margin-bottom: 40px; }
+
+/* Tag pills: bordered, all-caps, spaced letters */
 .info-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
 .info-tag {
   font-size: 8.5px; letter-spacing: .18em; text-transform: uppercase;
@@ -435,18 +607,15 @@ body.fullscreen-open.fullscreen-video #scrollCursor { opacity: 1; }
   border: 1px solid rgba(240,237,232,0.12); padding: 7px 14px;
 }
 
-/* ── Info Links ── */
-.info-links-wrap {
-  margin-bottom: 40px;
-}
+/* ── External Links ── */
+.info-links-wrap { margin-bottom: 40px; }
 .info-links-label {
   font-size: 8px; letter-spacing: .28em; text-transform: uppercase;
-  color: rgba(240,237,232,0.3); font-weight: 300;
-  margin-bottom: 14px;
+  color: rgba(240,237,232,0.3); font-weight: 300; margin-bottom: 14px;
 }
-.info-links {
-  display: flex; flex-direction: column; gap: 8px;
-}
+.info-links { display: flex; flex-direction: column; gap: 8px; }
+
+/* Each link is a bordered button with a ↗ arrow that animates on hover */
 .info-link {
   display: flex; align-items: center; justify-content: space-between;
   padding: 13px 18px;
@@ -463,18 +632,17 @@ body.fullscreen-open.fullscreen-video #scrollCursor { opacity: 1; }
   background: rgba(240,237,232,0.05);
   color: var(--white);
 }
+
+/* ↗ arrow shifts diagonally on hover */
 .info-link-arrow {
-  font-size: 13px;
-  opacity: 0.4;
-  display: inline-block;
+  font-size: 13px; opacity: 0.4; display: inline-block;
   transition: opacity .3s, transform .3s;
 }
 .info-link:hover .info-link-arrow {
-  opacity: 1;
-  transform: translate(3px, -3px);
+  opacity: 1; transform: translate(3px, -3px); /* Diagonal shift: 3px right, 3px up */
 }
 
-/* ── Info Meta Grid ── */
+/* ── Metadata Grid (Year / Client / Category / Duration) ── */
 .info-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .info-meta-item .meta-label {
   font-size: 8px; letter-spacing: .22em; text-transform: uppercase;
@@ -482,6 +650,7 @@ body.fullscreen-open.fullscreen-video #scrollCursor { opacity: 1; }
 }
 .info-meta-item .meta-val { font-size: 14px; font-weight: 300; color: rgba(240,237,232,0.75); }
 
+/* Close button positioned top-left inside the panel */
 #infoPanelClose {
   position: absolute; top: 34px; left: 36px;
   background: none; border: none; cursor: none;
@@ -490,7 +659,12 @@ body.fullscreen-open.fullscreen-video #scrollCursor { opacity: 1; }
 }
 #infoPanelClose:hover { color: var(--white); }
 
-/* ── Intro ── */
+
+/* ─── INTRO SPLASH SCREEN ────────────────────────────────────────────────────
+   Full-screen white overlay shown on page load.
+   "PROJECTS." text starts at opacity 0 and translateY(24px);
+   GSAP animates it in, holds, then fades the whole overlay out.
+   After the animation, JS sets display:none to remove it from layout. */
 .intro-overlay {
   position: fixed; inset: 0; background: var(--white); z-index: 50000;
   display: flex; align-items: center; justify-content: center; pointer-events: none;

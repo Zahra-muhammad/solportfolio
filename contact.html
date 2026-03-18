@@ -4,23 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CONTACT — SOL.</title>
+    <!-- Google Fonts:
+         Space Grotesk (700) — display headings, button text, form subtitle
+         DM Mono (300/400/500) — body text, labels, form inputs (monospace feel) -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/contact.css">
 </head>
 <body>
 
-<!-- Grain -->
+<!-- ==================== GRAIN OVERLAY ====================
+     Animated SVG fractal-noise texture fixed over the entire page.
+     mix-blend-mode: multiply blends it with the grey background.
+     @keyframes grain shifts it slightly each frame for a live film-grain effect.
+     pointer-events: none means it never blocks clicks or hovers. -->
 <div class="grain-overlay"></div>
 
-<!-- Loader -->
+<!-- ==================== LOADER ====================
+     Full-screen black intro overlay.
+     "CONTACT." text starts at opacity:0 and translateY(-40px).
+     GSAP animates it in, holds, then scales/fades it out before
+     fading the whole loader wrapper. JS sets display:none on complete. -->
 <div class="loader-wrapper" id="loader">
     <div class="loader-text" id="loaderText">CONTACT.</div>
 </div>
 
-<!-- Header -->
+<!-- ==================== HEADER ====================
+     Fixed top bar with two sides:
+     Left: back-to-home link + live GST clock (updated every second by JS)
+     Right: static availability/year text at reduced opacity -->
 <header class="header">
     <div>
+        <!-- ::after pseudo-element draws a sliding underline on hover -->
         <a href="index.html" class="back-link">← Back to Home</a>
+        <!-- JS updates this element every second using Intl.DateTimeFormat -->
         <div class="timestamp" id="timestamp">00:00:00 GMT+4</div>
     </div>
     <div class="header-right">
@@ -29,21 +45,40 @@
     </div>
 </header>
 
-<!-- Side ticker -->
+<!-- ==================== SIDE TICKER ====================
+     Decorative vertical text on the far left edge.
+     rotate(-90deg) makes it read bottom-to-top.
+     Low opacity (0.2) keeps it as a typographic accent, not primary content. -->
 <div class="side-ticker">ZAHRA MUHAMMAD — MULTIDISCIPLINARY DESIGNER — UAE — 2026</div>
 
-<!-- Page -->
+<!-- ==================== PAGE GRID ====================
+     Two-column CSS Grid: [1fr left] [1.1fr right]
+     The right column is slightly wider to balance the large heading on the left.
+     Starts invisible; GSAP reveals individual children via .reveal class. -->
 <div class="page-wrapper" id="pageWrapper">
 
-    <!-- LEFT COL -->
+    <!-- ==================== LEFT COLUMN ====================
+         Flex column split into three vertical zones:
+         - contact-headline (top: big title + description)
+         - contact-links    (middle: email / Instagram / GitHub rows)
+         - footer-left      (bottom: copyright) -->
     <div class="left-col">
+
+        <!-- ── Headline block ── -->
         <div class="contact-headline">
+            <!-- Small uppercase label with a decorative line drawn by ::before -->
             <div class="label-tag reveal">REACH OUT</div>
+
+            <!-- Big stacked title: each .line has overflow:hidden so its child
+                 .span starts at translateY(100%) and slides up via GSAP.
+                 This creates the "text emerging from below" reveal effect. -->
             <div class="big-title">
                 <span class="line"><span>LET'S</span></span>
                 <span class="line"><span>BUILD</span></span>
                 <span class="line"><span>SOMETHING.</span></span>
             </div>
+
+            <!-- Availability description — fades in as part of the .reveal stagger -->
             <p class="contact-desc reveal">
                 Available for UI/UX projects, frontend development,<br>
                 visual identities and immersive digital experiences.<br>
@@ -51,42 +86,61 @@
             </p>
         </div>
 
+        <!-- ── Contact link rows ──
+             Each .contact-row uses a ::before pseudo-element that scales from
+             scaleX(0) to scaleX(1) on hover, creating a full-width black fill.
+             The text colour transitions to white as the fill appears.
+             .row-value text also shifts 4px right via GSAP on mouseenter. -->
         <div class="contact-links reveal">
             <a class="contact-row" href="mailto:zahraimtiaz1826@gmail.com">
                 <span class="row-label">Email</span>
                 <span class="row-value">zahraimtiaz1826@gmail.com</span>
+                <!-- Arrow is hidden by default (opacity:0) and slides in on hover -->
                 <span class="row-arrow">↗</span>
             </a>
-            <a class="contact-row" href="https://instagram.com" target="_blank">
+            <a class="contact-row" href="https://www.instagram.com/sol.17z?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank">
                 <span class="row-label">Instagram</span>
-                <span class="row-value">@zahra.sol</span>
+                <span class="row-value">sol.17z</span>
                 <span class="row-arrow">↗</span>
             </a>
-            <a class="contact-row" href="https://linkedin.com" target="_blank">
-                <span class="row-label">LinkedIn</span>
-                <span class="row-value">/in/zahramuhammad</span>
-                <span class="row-arrow">↗</span>
-            </a>
-            <a class="contact-row" href="https://behance.net" target="_blank">
-                <span class="row-label">Behance</span>
-                <span class="row-value">behance.net/sol</span>
+            <a class="contact-row" href="https://github.com/Zahra-muhammad" target="_blank">
+                <span class="row-label">GitHub</span>
+                <span class="row-value">github/zahramuhammad</span>
                 <span class="row-arrow">↗</span>
             </a>
         </div>
 
+        <!-- ── Footer copyright ── -->
         <div class="footer-left reveal">
             <p>© 2026 — Zahra Muhammad</p>
             <p>All rights reserved — SOL.</p>
         </div>
     </div>
 
-    <!-- RIGHT COL -->
+    <!-- ==================== RIGHT COLUMN ====================
+         Contains the form header and the contact form.
+         justify-content: center keeps everything vertically centred. -->
     <div class="right-col">
+
+        <!-- Form section label and subtitle -->
         <div class="form-header reveal">
+            <!-- ::before draws a short decorative line like the left-side labels -->
             <div class="form-label">Send a message</div>
             <div class="form-subtitle">Tell me about<br>your project.</div>
         </div>
 
+        <!-- ==================== CONTACT FORM ====================
+             onsubmit calls handleSubmit() in JS, which:
+             1. Prevents native submission
+             2. Builds a Gmail compose URL with form data
+             3. Opens Gmail in a new tab
+             4. Shows the success flash message
+             5. Resets the form fields
+
+             Each .field-group has:
+             - A <label> that brightens (opacity 0.35 → 0.9) on :focus-within
+             - An input/textarea with transparent background (styled by CSS)
+             - A .field-line div that grows from width:0 to 100% on :focus-within -->
         <form class="contact-form reveal" id="contactForm" onsubmit="handleSubmit(event)">
             <div class="field-group">
                 <label for="name">Your Name</label>
@@ -105,13 +159,17 @@
             </div>
             <div class="field-group">
                 <label for="message">Message</label>
+                <!-- textarea: min-height set in CSS; resize: none prevents user resizing -->
                 <textarea id="message" name="message" placeholder="— describe your vision, timeline, and budget..." required></textarea>
                 <div class="field-line"></div>
             </div>
 
+            <!-- Submit row: response time note on the left, button on the right.
+                 Button uses a ::before fill sweep (scaleX) for its hover animation. -->
             <div class="submit-row">
                 <p class="submit-note">Response within<br>24–48 hours.</p>
                 <button type="submit" class="submit-btn">
+                    <!-- <span> is z-index:1 so it sits above the ::before fill overlay -->
                     <span>SEND MESSAGE →</span>
                 </button>
             </div>
@@ -119,15 +177,25 @@
     </div>
 </div>
 
-<!-- Counter -->
+<!-- ==================== PAGE COUNTER ====================
+     Decorative label at the bottom-centre identifying this as page 003.
+     Low opacity (0.3); fades in at the end of the GSAP intro sequence. -->
 <div class="project-counter">003 / CONTACT</div>
 
-<!-- Success flash -->
+<!-- ==================== SUCCESS FLASH ====================
+     Notification that slides up from below after form submission.
+     Starts off-screen (translateY(60px), opacity:0).
+     JS adds .show class which transitions it to visible position.
+     Automatically hidden and form reset after 4 seconds. -->
 <div class="success-msg" id="successMsg">Message sent — I'll be in touch.</div>
 
-<!-- Custom Cursor -->
+<!-- ==================== CUSTOM CURSOR ====================
+     A 14px white circle that follows the mouse via JS.
+     mix-blend-mode: difference inverts colours under the cursor for visibility.
+     .is-hovering class (toggled by JS) grows it to 22px on interactive elements. -->
 <div class="custom-cursor" id="cursor"></div>
 
+<!-- GSAP loaded before the contact script so the timeline and gsap object are available -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="js/contact.js"></script>
 </body>

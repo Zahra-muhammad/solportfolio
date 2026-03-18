@@ -1,17 +1,34 @@
+/* ─── RESET ──────────────────────────────────────────────────────────────────
+   Universal reset with box-sizing and forced cursor:none on every element.
+   !important is needed to override any browser default that might re-apply
+   a cursor on specific element types (inputs, textareas, etc.). */
 * { margin: 0; padding: 0; box-sizing: border-box; cursor: none !important; }
 
+
+/* ─── DESIGN TOKENS ──────────────────────────────────────────────────────────
+   --bg: mid grey page background — different from the cream used on profile/index
+   --black: true black for text, borders, and the loader background
+   --mono: DM Mono for body text and form inputs
+   --display: Space Grotesk for headings and the submit button */
 :root {
-    --bg: #d4d4d4;
-    --black: #000000;
-    --mono: 'DM Mono', monospace;
+    --bg:      #d4d4d4;
+    --black:   #000000;
+    --mono:    'DM Mono', monospace;
     --display: 'Space Grotesk', sans-serif;
 }
 
+/* ─── BODY ───────────────────────────────────────────────────────────────────
+   background-image: two repeating-linear-gradients layered together create
+   a fine grid/graph-paper texture at 3px intervals — very subtle (2–3% opacity).
+   overflow: hidden and height: 100vh lock the body to the viewport.
+   The right panel handles scrolling internally if needed. */
 body {
     font-family: var(--mono);
     background-color: var(--bg);
     background-image:
+        /* Horizontal lines every 3px */
         repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.03) 1px, rgba(0,0,0,0.03) 2px),
+        /* Vertical lines every 3px */
         repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(0,0,0,0.02) 1px, rgba(0,0,0,0.02) 2px);
     background-size: 100% 3px, 3px 100%;
     color: var(--black);
@@ -19,9 +36,14 @@ body {
     height: 100vh;
 }
 
-body::-webkit-scrollbar { display: none; }
+body::-webkit-scrollbar { display: none; } /* Hide scrollbar in Chrome/Safari */
 
-/* ===== LOADER ===== */
+
+/* ─── LOADER ─────────────────────────────────────────────────────────────────
+   Solid black full-screen overlay (contrast with the grey page beneath).
+   z-index 99999 ensures it's above every other element.
+   GSAP animates .loader-text in from translateY(-40px) then scales it out
+   before fading the whole wrapper via the loaderTl timeline in JS. */
 .loader-wrapper {
     position: fixed;
     inset: 0;
@@ -33,6 +55,8 @@ body::-webkit-scrollbar { display: none; }
     overflow: hidden;
 }
 
+/* "CONTACT." word: starts at opacity:0, translateY(-40px).
+   clamp() gives a fluid size from 80px minimum to 220px maximum. */
 .loader-text {
     font-family: var(--display);
     font-size: clamp(80px, 14vw, 220px);
@@ -43,7 +67,13 @@ body::-webkit-scrollbar { display: none; }
     transform: translateY(-40px);
 }
 
-/* ===== GRAIN ===== */
+
+/* ─── GRAIN OVERLAY ──────────────────────────────────────────────────────────
+   SVG fractal-noise texture as a fixed overlay.
+   Very low opacity (0.07) and mix-blend-mode: multiply blend it lightly
+   into the grey background for a textured, tactile feel.
+   @keyframes grain shifts the texture 1% in random directions every 0.12s
+   to produce an animated film-grain / static effect. */
 .grain-overlay {
     position: fixed;
     inset: 0;
@@ -52,7 +82,7 @@ body::-webkit-scrollbar { display: none; }
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='3.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     opacity: 0.07;
     mix-blend-mode: multiply;
-    animation: grain 0.12s steps(1) infinite;
+    animation: grain 0.12s steps(1) infinite; /* steps(1) = instant jump per frame */
 }
 
 @keyframes grain {
@@ -64,7 +94,10 @@ body::-webkit-scrollbar { display: none; }
     100% { transform: translate(0,0); }
 }
 
-/* ===== HEADER ===== */
+
+/* ─── HEADER ─────────────────────────────────────────────────────────────────
+   Fixed top bar with padding 14px 24px.
+   Flexbox space-between layout: left (back link + clock) vs right (status text). */
 .header {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -75,6 +108,8 @@ body::-webkit-scrollbar { display: none; }
     align-items: flex-start;
 }
 
+/* Back link: slides 3px left on hover with a growing underline (::after).
+   The underline starts at width:0 and expands to 100% on hover. */
 .back-link {
     color: var(--black);
     text-decoration: none;
@@ -85,7 +120,6 @@ body::-webkit-scrollbar { display: none; }
     display: inline-block;
     transition: transform 0.3s ease;
 }
-
 .back-link::after {
     content: '';
     position: absolute;
@@ -94,10 +128,10 @@ body::-webkit-scrollbar { display: none; }
     background: var(--black);
     transition: width 0.3s ease;
 }
+.back-link:hover::after { width: 100%; } /* Underline slides in */
+.back-link:hover { transform: translateX(-3px); } /* Subtle leftward nudge */
 
-.back-link:hover::after { width: 100%; }
-.back-link:hover { transform: translateX(-3px); }
-
+/* Live clock updated by JS — dimmed to 50% opacity as secondary info */
 .timestamp {
     font-size: 9px;
     opacity: 0.5;
@@ -105,6 +139,7 @@ body::-webkit-scrollbar { display: none; }
     margin-top: 4px;
 }
 
+/* Right-side static text — also dimmed as secondary info */
 .header-right {
     font-size: 9px;
     line-height: 1.7;
@@ -113,7 +148,12 @@ body::-webkit-scrollbar { display: none; }
     opacity: 0.5;
 }
 
-/* ===== MAIN LAYOUT ===== */
+
+/* ─── PAGE GRID ──────────────────────────────────────────────────────────────
+   Two-column fixed layout filling the full viewport.
+   padding-top: 80px clears the fixed header.
+   1fr left / 1.1fr right — the right column is slightly wider to balance
+   the large stacked heading on the left. */
 .page-wrapper {
     position: fixed;
     inset: 0;
@@ -124,7 +164,11 @@ body::-webkit-scrollbar { display: none; }
     height: 100vh;
 }
 
-/* ===== LEFT SIDE ===== */
+
+/* ─── LEFT COLUMN ────────────────────────────────────────────────────────────
+   Flex column using justify-content: space-between to push the three sections
+   (headline / links / footer) to the top, middle, and bottom of the column.
+   border-right provides the visual divider between the two columns. */
 .left-col {
     display: flex;
     flex-direction: column;
@@ -135,6 +179,8 @@ body::-webkit-scrollbar { display: none; }
 
 .contact-headline { margin-top: 20px; }
 
+/* Small uppercase eyebrow label.
+   ::before draws a 20px horizontal rule to the left of the text. */
 .label-tag {
     font-size: 9px;
     letter-spacing: 2px;
@@ -145,7 +191,6 @@ body::-webkit-scrollbar { display: none; }
     align-items: center;
     gap: 10px;
 }
-
 .label-tag::before {
     content: '';
     display: inline-block;
@@ -155,6 +200,12 @@ body::-webkit-scrollbar { display: none; }
     opacity: 0.4;
 }
 
+/* ─── BIG TITLE ──────────────────────────────────────────────────────────────
+   Three-line stacked heading.
+   Each .line has overflow:hidden which clips its child .span.
+   The .span starts at translateY(100%) — below the visible area —
+   and is animated up to 0% by GSAP, creating a "slide up from below" reveal.
+   clamp() provides a fluid font size from 52px to 110px. */
 .big-title {
     font-family: var(--display);
     font-size: clamp(52px, 8vw, 110px);
@@ -163,10 +214,10 @@ body::-webkit-scrollbar { display: none; }
     line-height: 0.92;
     margin-bottom: 32px;
 }
+.big-title .line { display: block; overflow: hidden; } /* Clipping parent */
+.big-title .line span { display: block; transform: translateY(100%); } /* GSAP animates this to 0% */
 
-.big-title .line { display: block; overflow: hidden; }
-.big-title .line span { display: block; transform: translateY(100%); }
-
+/* Description text: small, spaced, dimmed to 50% */
 .contact-desc {
     font-size: 10px;
     line-height: 1.8;
@@ -175,7 +226,14 @@ body::-webkit-scrollbar { display: none; }
     max-width: 340px;
 }
 
-/* ===== CONTACT LINKS ===== */
+
+/* ─── CONTACT LINK ROWS ──────────────────────────────────────────────────────
+   Each .contact-row is a flex row with label | value | arrow.
+   A ::before overlay fills the row on hover using scaleX(0 → 1) from the left,
+   creating a full-width black sweep that inverts the text colours to white.
+
+   z-index: 0 on ::before and z-index: 1 on text children ensures
+   the text always renders above the fill overlay. */
 .contact-links {
     display: flex;
     flex-direction: column;
@@ -189,11 +247,13 @@ body::-webkit-scrollbar { display: none; }
     padding: 14px 0;
     border-top: 1px solid rgba(0,0,0,0.12);
     position: relative;
-    overflow: hidden;
+    overflow: hidden; /* Clips the ::before fill during its scale animation */
+    text-decoration: none;
+    color: var(--black);
 }
-
 .contact-row:last-child { border-bottom: 1px solid rgba(0,0,0,0.12); }
 
+/* The fill sweep: starts collapsed (scaleX:0), expands from the left on hover */
 .contact-row::before {
     content: '';
     position: absolute;
@@ -204,13 +264,14 @@ body::-webkit-scrollbar { display: none; }
     transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1);
     z-index: 0;
 }
-
 .contact-row:hover::before { transform: scaleX(1); }
 
+/* All text children turn white when the black fill appears */
 .contact-row:hover .row-label,
 .contact-row:hover .row-value,
 .contact-row:hover .row-arrow { color: #fff; }
 
+/* Row label: small uppercase, dimmed */
 .row-label {
     font-size: 9px;
     letter-spacing: 2px;
@@ -220,9 +281,9 @@ body::-webkit-scrollbar { display: none; }
     z-index: 1;
     transition: color 0.3s ease, opacity 0.3s ease;
 }
+.contact-row:hover .row-label { opacity: 1; } /* Full opacity on hover */
 
-.contact-row:hover .row-label { opacity: 1; }
-
+/* Row value: larger bold text (Space Grotesk) */
 .row-value {
     font-family: var(--display);
     font-size: clamp(13px, 1.3vw, 18px);
@@ -233,29 +294,32 @@ body::-webkit-scrollbar { display: none; }
     position: relative;
     z-index: 1;
     transition: color 0.3s ease;
+    /* GSAP also nudges this 4px right on mouseenter (see contact.js) */
 }
 
+/* ↗ arrow: hidden by default, slides in from the left on hover */
 .row-arrow {
     font-size: 13px;
     opacity: 0;
     position: relative;
     z-index: 1;
     transition: opacity 0.3s ease, transform 0.3s ease, color 0.3s ease;
-    transform: translateX(-6px);
+    transform: translateX(-6px); /* Starts 6px to the left */
 }
-
 .contact-row:hover .row-arrow {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateX(0); /* Slides into position */
 }
 
-/* ===== FOOTER LEFT ===== */
+
+/* ─── FOOTER LEFT ────────────────────────────────────────────────────────────
+   Copyright text at the bottom of the left column.
+   Very low opacity (0.35) — purely informational. */
 .footer-left {
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
-
 .footer-left p {
     font-size: 9px;
     letter-spacing: 1px;
@@ -263,7 +327,10 @@ body::-webkit-scrollbar { display: none; }
     text-transform: uppercase;
 }
 
-/* ===== RIGHT SIDE: FORM ===== */
+
+/* ─── RIGHT COLUMN ───────────────────────────────────────────────────────────
+   Flex column with justify-content: center — keeps the form vertically centred.
+   padding-left: 48px provides breathing room from the divider border. */
 .right-col {
     padding-left: 48px;
     display: flex;
@@ -271,8 +338,10 @@ body::-webkit-scrollbar { display: none; }
     justify-content: center;
 }
 
+/* Form header: label + subtitle above the form fields */
 .form-header { margin-bottom: 32px; }
 
+/* Same ::before line pattern as .label-tag on the left column */
 .form-label {
     font-size: 9px;
     letter-spacing: 2px;
@@ -283,7 +352,6 @@ body::-webkit-scrollbar { display: none; }
     gap: 10px;
     margin-bottom: 10px;
 }
-
 .form-label::before {
     content: '';
     display: inline-block;
@@ -292,6 +360,7 @@ body::-webkit-scrollbar { display: none; }
     opacity: 0.4;
 }
 
+/* Subtitle: bold, display font, fluid size */
 .form-subtitle {
     font-family: var(--display);
     font-size: clamp(22px, 3vw, 38px);
@@ -300,7 +369,12 @@ body::-webkit-scrollbar { display: none; }
     line-height: 1.1;
 }
 
-/* ===== FORM FIELDS ===== */
+
+/* ─── FORM FIELDS ────────────────────────────────────────────────────────────
+   Each .field-group stacks: label → input/textarea → .field-line.
+   border-top on each group creates horizontal separators.
+   :focus-within targets the group when any child is focused,
+   brightening the label and animating the underline (.field-line). */
 .contact-form {
     display: flex;
     flex-direction: column;
@@ -308,12 +382,12 @@ body::-webkit-scrollbar { display: none; }
 }
 
 .field-group {
-    position: relative;
+    position: relative; /* Positioning context for .field-line */
     border-top: 1px solid rgba(0,0,0,0.12);
 }
-
 .field-group:last-of-type { border-bottom: 1px solid rgba(0,0,0,0.12); }
 
+/* Label brightens from 0.35 to 0.9 opacity when the field is focused */
 .field-group label {
     display: block;
     font-size: 8px;
@@ -323,25 +397,27 @@ body::-webkit-scrollbar { display: none; }
     padding: 10px 0 0;
     transition: opacity 0.3s ease;
 }
-
 .field-group:focus-within label { opacity: 0.9; }
 
+/* Input and textarea: transparent background, no border/outline (handled by .field-line) */
 .field-group input,
 .field-group textarea {
     width: 100%;
     background: transparent;
     border: none;
     outline: none;
-    font-family: var(--mono);
+    font-family: var(--mono); /* Keeps the monospace aesthetic in typed text */
     font-size: 12px;
     color: var(--black);
     padding: 4px 0 10px;
     letter-spacing: 0.3px;
-    resize: none;
+    resize: none; /* Prevent manual textarea resizing */
 }
-
 .field-group textarea { min-height: 72px; }
 
+/* Animated underline: sits at the bottom of each field group.
+   Starts at width:0 and expands to 100% when the field is focused.
+   The cubic-bezier produces a snappy spring-like grow. */
 .field-line {
     position: absolute;
     bottom: 0; left: 0;
@@ -349,17 +425,21 @@ body::-webkit-scrollbar { display: none; }
     background: var(--black);
     transition: width 0.4s cubic-bezier(0.76, 0, 0.24, 1);
 }
-
 .field-group:focus-within .field-line { width: 100%; }
 
-/* ===== SUBMIT BUTTON ===== */
+
+/* ─── SUBMIT BUTTON ──────────────────────────────────────────────────────────
+   Black button with white text; inverts on hover using a ::before fill sweep.
+   The sweep starts at scaleX:0 from the right, expands left to right on hover.
+   The <span> inside is z-index:1 to stay above the animated fill layer.
+
+   submit-row is a flex row: response note (left) + button (right). */
 .submit-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-top: 28px;
 }
-
 .submit-note {
     font-size: 9px;
     letter-spacing: 0.5px;
@@ -374,35 +454,41 @@ body::-webkit-scrollbar { display: none; }
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: var(--bg);
+    color: var(--bg);         /* White-ish text on black background */
     background: var(--black);
     border: none;
     padding: 14px 32px;
     position: relative;
-    overflow: hidden;
+    overflow: hidden;         /* Clips the ::before fill during animation */
     transition: color 0.3s ease;
 }
 
+/* Fill sweep: background-colour starts collapsed from the right */
 .submit-btn::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: var(--bg);
+    background: var(--bg);   /* Fills with the page background colour */
     transform: scaleX(0);
     transform-origin: right;
     transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1);
 }
-
+/* On hover: sweep expands from left (origin flips) → fill covers button → text darkens */
 .submit-btn:hover::before { transform: scaleX(1); transform-origin: left; }
 .submit-btn:hover { color: var(--black); }
-.submit-btn span { position: relative; z-index: 1; }
+.submit-btn span { position: relative; z-index: 1; } /* Text above fill overlay */
 
-/* ===== SUCCESS FLASH ===== */
+
+/* ─── SUCCESS FLASH ──────────────────────────────────────────────────────────
+   Notification bar that appears after successful form submission.
+   Starts off-screen (translateY(60px), opacity:0).
+   JS adds .show class which transitions it to the visible position.
+   After 4s, JS removes .show and resets the button text. */
 .success-msg {
     position: fixed;
     bottom: 30px;
     left: 50%;
-    transform: translateX(-50%) translateY(60px);
+    transform: translateX(-50%) translateY(60px); /* Off-screen start */
     background: var(--black);
     color: #fff;
     font-size: 10px;
@@ -412,15 +498,17 @@ body::-webkit-scrollbar { display: none; }
     opacity: 0;
     transition: all 0.4s ease;
     z-index: 1000;
-    pointer-events: none;
+    pointer-events: none; /* Never blocks clicks */
 }
-
 .success-msg.show {
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0); /* Slides up into view */
     opacity: 1;
 }
 
-/* ===== DECORATIVE COUNTER ===== */
+
+/* ─── PROJECT COUNTER ────────────────────────────────────────────────────────
+   Decorative page indicator at the bottom-centre of the screen.
+   Low opacity (0.3) — it's purely a typographic design element. */
 .project-counter {
     position: fixed;
     bottom: 20px;
@@ -433,7 +521,12 @@ body::-webkit-scrollbar { display: none; }
     z-index: 50;
 }
 
-/* ===== CUSTOM CURSOR ===== */
+
+/* ─── CUSTOM CURSOR ──────────────────────────────────────────────────────────
+   A 14px white dot replacing the OS cursor.
+   mix-blend-mode: difference inverts the colours underneath the dot,
+   keeping it visible on both dark and light backgrounds.
+   .is-hovering (added by JS on interactive elements) grows it to 22px. */
 .custom-cursor {
     position: fixed;
     top: 0;
@@ -444,17 +537,20 @@ body::-webkit-scrollbar { display: none; }
     border-radius: 50%;
     pointer-events: none;
     z-index: 99998;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%); /* Keep the dot centred on the cursor point */
     mix-blend-mode: difference;
     transition: width 0.2s ease, height 0.2s ease;
 }
-
 .custom-cursor.is-hovering {
     width: 22px;
-    height: 22px;
+    height: 22px; /* Expands on hover over interactive elements */
 }
 
-/* ===== VERTICAL TICKER ===== */
+
+/* ─── VERTICAL SIDE TICKER ───────────────────────────────────────────────────
+   Decorative text on the far left, rotated -90° to read bottom-to-top.
+   transform-origin: center keeps it centred at the mid-height of the page.
+   Very low opacity (0.2) makes it a background typographic element. */
 .side-ticker {
     position: fixed;
     left: 10px;
@@ -469,5 +565,10 @@ body::-webkit-scrollbar { display: none; }
     z-index: 50;
 }
 
-/* ===== ANIM HELPERS ===== */
+
+/* ─── REVEAL HELPER CLASS ────────────────────────────────────────────────────
+   Applied in HTML to elements that should animate in after the loader exits.
+   Sets their initial state: invisible and shifted 20px down.
+   GSAP's loaderTl timeline in JS animates these to opacity:1 and y:0
+   via a stagger, creating a sequential cascade entrance. */
 .reveal { opacity: 0; transform: translateY(20px); }

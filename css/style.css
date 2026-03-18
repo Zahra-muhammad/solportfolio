@@ -1,27 +1,23 @@
-/* Import Fonts */
+/* ==================== FONTS ====================
+   Space Grotesk — primary display/UI font (weights 300–700)
+   Inter — secondary body font (weights 200–900)
+   Both loaded from Google Fonts for broad browser support. */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
-/* ==================== HIDE SCROLLBAR ==================== */
-body::-webkit-scrollbar {
-    display: none;
-}
 
-body {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
+/* ==================== HIDE SCROLLBAR ====================
+   Removes the native scrollbar across all browsers.
+   Scroll behaviour is handled entirely by the custom JS wheel listener,
+   so the native scrollbar is unnecessary and visually undesirable. */
+body::-webkit-scrollbar { display: none; }           /* Chrome, Safari, Edge */
+body { -ms-overflow-style: none; scrollbar-width: none; } /* IE / Firefox */
+html::-webkit-scrollbar { display: none; }
+html { -ms-overflow-style: none; scrollbar-width: none; overflow: hidden; }
 
-html::-webkit-scrollbar {
-    display: none;
-}
 
-html {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    overflow: hidden;
-}
-
-/* CSS Reset & Variables */
+/* ==================== CSS RESET & CUSTOM PROPERTIES ====================
+   Universal box-sizing reset prevents padding/border from adding to element width.
+   CSS variables centralise the colour palette and font stack so they're easy to update. */
 * {
     margin: 0;
     padding: 0;
@@ -31,9 +27,9 @@ html {
 :root {
     --black: #000000;
     --white: #ffffff;
-    --gray: #999999;
-    
-    --font-primary: 'Space Grotesk', sans-serif;
+    --gray:  #999999;
+
+    --font-primary:   'Space Grotesk', sans-serif;
     --font-secondary: 'Inter', sans-serif;
 }
 
@@ -41,19 +37,24 @@ body {
     font-family: var(--font-primary);
     background: var(--black);
     color: var(--white);
-    overflow: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    cursor: none;
+    overflow: hidden;                      /* No scroll — JS controls movement */
+    -webkit-font-smoothing: antialiased;   /* Crisper text on macOS/iOS */
+    -moz-osx-font-smoothing: grayscale;    /* Same for Firefox on macOS */
+    cursor: none;                          /* Hide OS cursor; custom JS cursor used instead */
     position: relative;
     height: 100vh;
 }
 
+/* Locks scroll during the loader animation to prevent content flash */
 body.loading {
     overflow: hidden;
 }
 
-/* ==================== LOADER ==================== */
+
+/* ==================== LOADER ====================
+   Fixed full-screen overlay shown on page load.
+   Sits above everything (z-index: 9999) and is
+   faded out + hidden by GSAP once animations complete. */
 .loader-wrapper {
     position: fixed;
     top: 0;
@@ -77,20 +78,26 @@ body.loading {
     justify-content: center;
 }
 
+/* The animated "SOL." brand text.
+   Starts off-screen (translateY(-100vh)) and invisible;
+   GSAP slides it in and then scales/fades it out. */
 .loader-text {
     font-family: var(--font-primary);
-    font-size: clamp(120px, 20vw, 300px);
+    font-size: clamp(120px, 20vw, 300px); /* Fluid size: min 120px, preferred 20vw, max 300px */
     font-weight: 700;
     color: var(--white);
     letter-spacing: -0.05em;
     line-height: 0.9;
     opacity: 0;
-    transform: translateY(-100vh);
+    transform: translateY(-100vh);         /* Initial off-screen position for GSAP to animate from */
     position: relative;
     z-index: 2;
 }
 
-/* Main Content */
+
+/* ==================== MAIN CONTENT ====================
+   Hidden by default; GSAP reveals it after the loader exits.
+   visibility: hidden prevents it from being focusable or interactive until shown. */
 .main-content {
     opacity: 0;
     visibility: hidden;
@@ -100,7 +107,10 @@ body.loading {
     overflow: hidden;
 }
 
-/* ==================== INFINITE SCROLL GALLERY ==================== */
+
+/* ==================== INFINITE SCROLL GALLERY ====================
+   A fixed, full-viewport grid of images used as an animated background.
+   The grid is moved vertically by GSAP on wheel events (see script.js). */
 .infinite-gallery-wrapper {
     position: fixed;
     top: 0;
@@ -108,9 +118,12 @@ body.loading {
     width: 100%;
     height: 100vh;
     overflow: hidden;
-    z-index: 0;
+    z-index: 0; /* Behind all UI elements */
 }
 
+/* 4-column grid; each row is 50vh tall.
+   will-change: transform hints to the browser to GPU-accelerate this element,
+   which improves scroll animation performance. */
 .gallery-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -125,17 +138,22 @@ body.loading {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    will-change: order;
+    will-change: order; /* Animated by GSAP during grid shuffle */
 }
 
+/* Images are converted to greyscale and slightly dimmed
+   so they don't overpower the UI text layered on top. */
 .gallery-item img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: cover;   /* Fill the cell without distortion */
     display: block;
     filter: grayscale(100%) contrast(1.1) brightness(0.8);
 }
 
+/* SVG fractal-noise texture overlaid on each individual image.
+   mix-blend-mode: overlay merges it with the image for an analogue feel.
+   pointer-events: none prevents it from interfering with mouse interactions. */
 .image-grain {
     position: absolute;
     inset: 0;
@@ -146,45 +164,45 @@ body.loading {
     z-index: 1;
 }
 
-/* ==================== SMOOTH BLUR VIGNETTE ==================== */
+
+/* ==================== BLUR / VIGNETTE OVERLAY ====================
+   Two radial gradients blended together create soft black fades at
+   the top and bottom edges of the gallery, making it appear to
+   dissolve into the dark background rather than having a hard cut. */
 .blur-vignette {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none;
+    pointer-events: none; /* Must not block clicks/hovers on UI above it */
     z-index: 5;
-    background: 
+    background:
+        /* Top fade: black at the very top, transparent at ~45% down */
         radial-gradient(
             ellipse 100% 40% at 50% 0%,
-            rgba(0, 0, 0, 0.98) 0%,
-            rgba(0, 0, 0, 0.95) 5%,
-            rgba(0, 0, 0, 0.9) 10%,
-            rgba(0, 0, 0, 0.8) 15%,
-            rgba(0, 0, 0, 0.65) 20%,
-            rgba(0, 0, 0, 0.5) 25%,
-            rgba(0, 0, 0, 0.35) 30%,
-            rgba(0, 0, 0, 0.2) 35%,
-            rgba(0, 0, 0, 0.1) 40%,
-            transparent 45%
+            rgba(0,0,0,0.98) 0%,  rgba(0,0,0,0.95) 5%,
+            rgba(0,0,0,0.9)  10%, rgba(0,0,0,0.8)  15%,
+            rgba(0,0,0,0.65) 20%, rgba(0,0,0,0.5)  25%,
+            rgba(0,0,0,0.35) 30%, rgba(0,0,0,0.2)  35%,
+            rgba(0,0,0,0.1)  40%, transparent 45%
         ),
+        /* Bottom fade: mirrors the top gradient */
         radial-gradient(
             ellipse 100% 40% at 50% 100%,
-            rgba(0, 0, 0, 0.98) 0%,
-            rgba(0, 0, 0, 0.95) 5%,
-            rgba(0, 0, 0, 0.9) 10%,
-            rgba(0, 0, 0, 0.8) 15%,
-            rgba(0, 0, 0, 0.65) 20%,
-            rgba(0, 0, 0, 0.5) 25%,
-            rgba(0, 0, 0, 0.35) 30%,
-            rgba(0, 0, 0, 0.2) 35%,
-            rgba(0, 0, 0, 0.1) 40%,
-            transparent 45%
+            rgba(0,0,0,0.98) 0%,  rgba(0,0,0,0.95) 5%,
+            rgba(0,0,0,0.9)  10%, rgba(0,0,0,0.8)  15%,
+            rgba(0,0,0,0.65) 20%, rgba(0,0,0,0.5)  25%,
+            rgba(0,0,0,0.35) 30%, rgba(0,0,0,0.2)  35%,
+            rgba(0,0,0,0.1)  40%, transparent 45%
         );
 }
 
-/* ==================== GLOBAL GRAIN OVERLAY ==================== */
+
+/* ==================== GLOBAL GRAIN OVERLAY ====================
+   A second noise texture applied over the entire page (not just images).
+   Lower opacity (0.15) so it subtly textures the whole UI.
+   The @keyframes shift it by 1% every 0.1s to simulate analogue film grain. */
 .grain-overlay {
     position: fixed;
     top: 0;
@@ -192,28 +210,33 @@ body.loading {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 1000;
+    z-index: 1000; /* Above the gallery and vignette, below the UI */
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='4' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     opacity: 0.15;
     mix-blend-mode: overlay;
-    animation: static-noise 0.1s steps(1) infinite;
+    animation: static-noise 0.1s steps(1) infinite; /* steps(1) = instant jump, no easing */
 }
 
+/* Randomly offsets the grain texture by 1% in different directions each step.
+   Because the texture tiles, small offsets make it look like different frames of grain. */
 @keyframes static-noise {
-    0% { transform: translate(0, 0); }
-    10% { transform: translate(-1%, 1%); }
-    20% { transform: translate(1%, -1%); }
-    30% { transform: translate(-1%, -1%); }
-    40% { transform: translate(1%, 1%); }
-    50% { transform: translate(-1%, 0); }
-    60% { transform: translate(1%, 0); }
-    70% { transform: translate(0, 1%); }
-    80% { transform: translate(0, -1%); }
-    90% { transform: translate(-1%, 1%); }
+    0%   { transform: translate(0, 0); }
+    10%  { transform: translate(-1%, 1%); }
+    20%  { transform: translate(1%, -1%); }
+    30%  { transform: translate(-1%, -1%); }
+    40%  { transform: translate(1%, 1%); }
+    50%  { transform: translate(-1%, 0); }
+    60%  { transform: translate(1%, 0); }
+    70%  { transform: translate(0, 1%); }
+    80%  { transform: translate(0, -1%); }
+    90%  { transform: translate(-1%, 1%); }
     100% { transform: translate(1%, -1%); }
 }
 
-/* ==================== CORNER TEXT ==================== */
+
+/* ==================== CORNER TEXT ====================
+   Small fixed-position labels placed at screen corners for
+   location info, skill list, and navigation. */
 .corner-text {
     position: fixed;
     z-index: 100;
@@ -223,7 +246,7 @@ body.loading {
     line-height: 1.6;
     text-transform: uppercase;
     color: var(--white);
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8); /* Lifts text off dark backgrounds */
 }
 
 .corner-text p {
@@ -231,21 +254,25 @@ body.loading {
     padding: 2px 0;
 }
 
+/* Top-left block: location and timestamp */
 .top-left {
     top: 24px;
     left: 24px;
 }
 
+/* Slightly dimmed and smaller — secondary info styling */
 .timestamp {
     opacity: 0.7;
     font-size: 10px;
 }
 
+/* Second block from left: expertise list */
 .top-left-center {
     top: 24px;
     left: 220px;
 }
 
+/* Centred navigation block */
 .top-center-wide {
     top: 24px;
     left: 50%;
@@ -266,6 +293,9 @@ body.loading {
     align-items: center;
 }
 
+/* Navigation links with a vertical-slide hover effect.
+   The visible text slides up; a duplicate (via ::before + data-text)
+   slides in from below to replace it. */
 .nav-link {
     color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
@@ -275,23 +305,25 @@ body.loading {
     cursor: none;
     position: relative;
     display: inline-block;
-    overflow: hidden;
+    overflow: hidden; /* Clips the second copy before it enters view */
 }
 
 .nav-link span {
     display: inline-block;
-    transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1);
+    transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1); /* Snappy ease */
 }
 
 .nav-link:hover span {
-    transform: translateY(-100%);
+    transform: translateY(-100%); /* Slides the visible text up and off */
     color: var(--white);
 }
 
+/* The hidden duplicate text that slides up into view on hover.
+   data-text attribute in HTML must match the link label. */
 .nav-link::before {
     content: attr(data-text);
     position: absolute;
-    top: 100%;
+    top: 100%;           /* Starts below the element */
     left: 0;
     color: var(--white);
     transform: translateY(0);
@@ -299,9 +331,10 @@ body.loading {
 }
 
 .nav-link:hover::before {
-    transform: translateY(-100%);
+    transform: translateY(-100%); /* Slides the duplicate up into view */
 }
 
+/* Top-right CTA button group */
 .top-right {
     position: fixed;
     top: 24px;
@@ -309,9 +342,11 @@ body.loading {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    z-index: 10000;
+    z-index: 10000; /* Must be above the grain overlay (z-index: 1000) */
 }
 
+/* Pill-style buttons that invert on hover.
+   Same vertical-slide text trick as .nav-link, using ::before + data-text. */
 .corner-btn {
     background: var(--white);
     color: var(--black);
@@ -357,228 +392,191 @@ body.loading {
     transform: translate(-50%, -100%);
 }
 
+/* On hover: invert to black background / white text, add a subtle white glow */
 .corner-btn:hover {
     background: var(--black);
     color: var(--white);
     box-shadow: 0 6px 16px rgba(255, 255, 255, 0.3);
 }
 
-/* ==================== CUSTOM CURSOR ==================== */
+
+/* ==================== CUSTOM CURSOR ====================
+   A small white dot that replaces the default OS cursor.
+   mix-blend-mode: difference inverts whatever colour is underneath,
+   keeping the cursor visible against both light and dark surfaces.
+   The .hover class scales it up when over a clickable element. */
 .custom-cursor {
     position: fixed;
     width: 10px;
     height: 10px;
     background: rgba(255, 255, 255, 0.95);
     border-radius: 50%;
-    pointer-events: none;
+    pointer-events: none;       /* Must not capture mouse events itself */
     z-index: 10000;
     mix-blend-mode: difference;
     transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
 .custom-cursor.hover {
-    transform: scale(3.5);
+    transform: scale(3.5);       /* Grows 3.5× when hovering interactive elements */
     background: rgba(255, 255, 255, 0.8);
 }
 
-/* ==================== RESPONSIVE ==================== */
+
+/* ==================== RESPONSIVE BREAKPOINTS ====================
+   Adjusts layout and hides elements at smaller viewport widths.
+   The custom cursor is hidden on touch devices that have no mouse. */
+
 @media (max-width: 1024px) {
-    body {
-        cursor: auto;
-    }
-    
-    .custom-cursor {
-        display: none;
-    }
-    
-    .corner-text {
-        font-size: 9px;
-    }
-    
-    .top-left-center {
-        left: 180px;
-    }
-    
-    .top-center-wide {
-        max-width: 600px;
-        font-size: 9px;
-    }
-    
-    .gallery-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
+    body { cursor: auto; }           /* Restore native cursor on tablet/touch */
+    .custom-cursor { display: none; }
+
+    .corner-text { font-size: 9px; }
+    .top-left-center { left: 180px; }
+    .top-center-wide { max-width: 600px; font-size: 9px; }
+    .gallery-grid { grid-template-columns: repeat(3, 1fr); } /* 3 columns instead of 4 */
 }
 
 @media (max-width: 768px) {
-    .corner-text {
-        font-size: 8px;
-        line-height: 1.5;
-    }
-    
-    .top-left {
-        top: 16px;
-        left: 16px;
-    }
-    
-    .top-left-center {
-        display: none;
-    }
-    
-    .top-center-wide {
-        top: auto;
-        bottom: 80px;
-        max-width: calc(100% - 32px);
-        font-size: 8px;
-    }
-    
-    .top-right {
-        top: 16px;
-        right: 16px;
-        gap: 6px;
-    }
-    
-    .corner-btn {
-        padding: 6px 12px;
-        font-size: 8px;
-    }
-    
-    .gallery-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    .corner-text { font-size: 8px; line-height: 1.5; }
+    .top-left { top: 16px; left: 16px; }
+    .top-left-center { display: none; } /* Hide expertise column on mobile */
+    .top-center-wide { top: auto; bottom: 80px; max-width: calc(100% - 32px); font-size: 8px; }
+    .top-right { top: 16px; right: 16px; gap: 6px; }
+    .corner-btn { padding: 6px 12px; font-size: 8px; }
+    .gallery-grid { grid-template-columns: repeat(2, 1fr); } /* 2 columns on mobile */
 }
 
 @media (max-width: 480px) {
-    .corner-text {
-        font-size: 7px;
-    }
-    
-    .top-left {
-        top: 12px;
-        left: 12px;
-    }
-    
-    .top-right {
-        top: 12px;
-        right: 12px;
-    }
-    
-    .corner-btn {
-        padding: 5px 10px;
-        font-size: 7px;
-    }
+    .corner-text { font-size: 7px; }
+    .top-left { top: 12px; left: 12px; }
+    .top-right { top: 12px; right: 12px; }
+    .corner-btn { padding: 5px 10px; font-size: 7px; }
 }
 
-/* ==================== TOP STRIP (WITH SOCIAL CONTACTS) ==================== */
 
+/* ==================== TOP NAVIGATION STRIP ====================
+   A fixed header bar that holds all five info columns.
+   Uses CSS Grid for precise horizontal alignment.
+   Background is fully transparent — the gallery shows through. */
 .top-strip {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 90px;
-  z-index: 1000;
-  background: rgba(0, 0, 0, 0);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 90px;
+    z-index: 1000; /* Above gallery and grain, below custom cursor */
+    background: rgba(0, 0, 0, 0); /* Transparent */
 }
 
+/* 5-column grid layout:
+   [location | skills | nav | bio | CTAs]
+   The 4th column (bio) stretches to fill remaining space with '1fr'. */
 .top-strip-inner {
-  height: 100%;
-  display: grid;
-  grid-template-columns: 220px 220px 180px 1fr 160px;
-  gap: 32px;
-  align-items: start;
-  padding: 24px;
-  font-size: 11px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 220px 220px 180px 1fr 160px;
+    gap: 32px;
+    align-items: start;   /* Align content to the top of each cell */
+    padding: 24px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
 .ts-col p {
-  margin: 2px 0;
-  line-height: 1.4;
+    margin: 2px 0;
+    line-height: 1.4;
 }
 
+/* Bio column: limit text width to prevent overly long lines */
 .ts-col.wide p {
-  max-width: 720px;
+    max-width: 720px;
 }
 
+/* CTA column: stack buttons vertically, aligned to the right edge */
 .ts-col.right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  cursor: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    cursor: none;
 }
 
+/* Bordered ghost-button style for Profile / Contact links */
 .ts-col.right a {
-  color: white;
-  text-decoration: none;
-  border: 1px solid rgba(255,255,255,0.25);
-  padding: 6px 14px;
-  font-size: 10px;
-  transition: all 0.3s ease;
+    color: white;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 6px 14px;
+    font-size: 10px;
+    transition: all 0.3s ease;
 }
 
 .ts-col.right a:hover {
-  background: rgba(255,255,255,0.1);
-  border-color: rgba(255,255,255,0.5);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
 }
 
-/* Social Links Styling */
+/* Inline navigation/social links (e.g. WORK, ABOUT) */
 .social-link {
-  color: rgba(255, 255, 255, 0.7);
-  text-decoration: none;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.05em;
-  cursor: none;
-  transition: color 0.3s ease;
-  display: inline-block;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    cursor: none;
+    transition: color 0.3s ease;
+    display: inline-block;
 }
 
 .social-link:hover {
-  color: var(--white);
+    color: var(--white);
 }
 
-/* Responsive adjustments for top strip */
+
+/* ==================== RESPONSIVE ADJUSTMENTS (TOP STRIP) ====================
+   Progressively collapses the grid columns to prevent overflow on smaller screens. */
+
 @media (max-width: 1400px) {
-  .top-strip-inner {
-    grid-template-columns: 200px 200px 160px 1fr 140px;
-    gap: 24px;
-  }
+    .top-strip-inner {
+        grid-template-columns: 200px 200px 160px 1fr 140px;
+        gap: 24px;
+    }
 }
 
 @media (max-width: 1200px) {
-  .top-strip-inner {
-    grid-template-columns: 180px 180px 140px 1fr 120px;
-    gap: 20px;
-    font-size: 10px;
-  }
+    .top-strip-inner {
+        grid-template-columns: 180px 180px 140px 1fr 120px;
+        gap: 20px;
+        font-size: 10px;
+    }
 }
 
 @media (max-width: 1024px) {
-  .top-strip {
-    height: auto;
-  }
-  
-  .top-strip-inner {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 16px;
-  }
-  
-  .ts-col.right {
-    align-items: flex-start;
-    flex-direction: row;
-  }
+    .top-strip { height: auto; }
+
+    /* Stack all columns vertically on tablet */
+    .top-strip-inner {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 16px;
+    }
+
+    .ts-col.right {
+        align-items: flex-start;
+        flex-direction: row; /* Buttons side-by-side when stacked */
+    }
 }
 
 @media (max-width: 768px) {
-  .top-strip-inner {
-    font-size: 9px;
-    gap: 12px;
-  }
-  
-  .ts-col:nth-child(3) {
-    display: none;
-  }
+    .top-strip-inner {
+        font-size: 9px;
+        gap: 12px;
+    }
+
+    /* Hide the navigation column (3rd child) on mobile to reduce clutter */
+    .ts-col:nth-child(3) {
+        display: none;
+    }
 }

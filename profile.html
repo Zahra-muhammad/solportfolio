@@ -8,7 +8,15 @@
 </head>
 <body>
 
-<!-- Atmosphere layers -->
+<!-- ==================== ATMOSPHERE LAYERS ====================
+     Three purely decorative fixed overlays that add texture and depth
+     to the light cream background, giving it a tactile, editorial feel.
+
+     .grain     — animated SVG fractal-noise texture (mix-blend-mode: multiply)
+     .scanlines — faint horizontal line pattern mimicking a CRT/print aesthetic
+     .vlines    — 12-column invisible grid lines matching the CSS grid layout;
+                  the <span> elements form the 12 columns via grid-template-columns.
+                  aria-hidden="true" hides them from screen readers. -->
 <div class="grain"></div>
 <div class="scanlines"></div>
 <div class="vlines" aria-hidden="true">
@@ -17,47 +25,81 @@
     <span></span><span></span><span></span><span></span>
 </div>
 
-<!-- Loader -->
+<!-- ==================== LOADER ====================
+     Full-screen intro overlay that displays "PROFILE." before revealing
+     the page content. GSAP animates the word in, then scales/fades it out,
+     then fades the entire loader out. After the animation completes,
+     JS sets display:none to remove it from the layout. -->
 <div class="loader" id="loader">
-    <div class="loader-word" id="lword">THE PROFILE.</div>
+    <!-- The large animated word; starts at opacity:0 and translateY(-40px) -->
+    <div class="loader-word" id="lword">PROFILE.</div>
 </div>
 
-<!-- Ticker -->
+<!-- ==================== TICKER ====================
+     Fixed bottom bar with a continuously scrolling marquee of keywords.
+     .ticker-track is populated dynamically by JS (words array duplicated
+     so the animation loops seamlessly at the 50% mark via translateX(-50%)). -->
 <div class="ticker"><div class="ticker-track" id="tt"></div></div>
 
-<!-- Page -->
+<!-- ==================== PAGE GRID ====================
+     Three-column CSS Grid layout:
+     [48px index strip] [flexible left panel] [370px right panel]
+     Starts at opacity:0 and is revealed by GSAP after the loader exits. -->
 <div class="page" id="page">
 
-    <!-- Index strip -->
+    <!-- ==================== INDEX STRIP ====================
+         Narrow 48px sidebar on the far left.
+         Contains the page title (rotated vertical text) and a page number.
+         Acts as a typographic accent / editorial detail. -->
     <div class="index-strip">
+        <!-- Writing-mode: vertical-rl + rotate(180deg) = bottom-to-top text -->
         <div class="idx-label">Zahra Muhammad — Profile</div>
         <div class="idx-num">01</div>
     </div>
 
-    <!-- LEFT PANEL -->
+    <!-- ==================== LEFT PANEL ====================
+         The main hero/identity area.
+         Contains: back link, live status + timestamp, hero heading + bio, stats. -->
     <div class="left-panel">
+
+        <!-- Large background text positioned absolutely behind all content.
+             -webkit-text-stroke makes it a visible outline without fill.
+             pointer-events: none and user-select: none prevent interaction. -->
         <div class="ghost-name">ZAHRA</div>
 
-        <!-- Top row: back link | meta on right -->
+        <!-- Top row: back navigation (left) and status/time meta (right) -->
         <div class="top-row">
+            <!-- hover-el class triggers cursor scale-up via JS -->
             <a href="index.html" class="back-link hover-el">← Back to Home</a>
+
+            <!-- Status block: live availability dot, live GST clock, location -->
             <div class="top-meta">
+                <!-- .live-dot pulses via CSS animation to signal active availability -->
                 <div><span class="live-dot"></span>Available</div>
+                <!-- #ts is updated every second by JS using Intl.DateTimeFormat -->
                 <div id="ts">—</div>
                 <div>UAE / Global</div>
             </div>
         </div>
 
-        <!-- Hero -->
+        <!-- Hero section: eyebrow label, name, discipline tags, bio text.
+             All children start at opacity:0 and are animated in by GSAP stagger. -->
         <div class="hero-block">
+            <!-- Small uppercase label above the name; fades in first -->
             <div class="hero-eyebrow" id="eyebrow">Multidisciplinary Designer</div>
+
+            <!-- Main name: each .ln (line) slides up from translateY(110%) individually -->
             <h1 class="hero-name">
                 <span class="ln">Zahra</span>
                 <span class="ln">Muhammad.</span>
             </h1>
+
+            <!-- Discipline tags: fades in after the name lines -->
             <p class="hero-sub" id="hsub">
                 UI/UX <span>·</span> Frontend Dev <span>·</span> Visual Direction
             </p>
+
+            <!-- Bio paragraph: last element to fade in on the left panel -->
             <p class="hero-bio" id="hbio">
                 I build digital experiences where structure meets sensation.
                 Based in the UAE, working with clients and teams worldwide —
@@ -66,10 +108,12 @@
             </p>
         </div>
 
-        <!-- Divider -->
+        <!-- Labeled horizontal rule separating the hero from the stats.
+             ::after pseudo-element draws the line; the <span> is the label. -->
         <div class="hr-labeled" id="hr1"><span>Overview</span></div>
 
-        <!-- Stats -->
+        <!-- Stats row: three data points with large numbers and small labels.
+             Numbers gain accent colour on hover via .stat-item:hover .stat-n -->
         <div class="stats-row" id="stats">
             <div class="stat-item">
                 <div class="stat-n">02.</div>
@@ -87,12 +131,19 @@
     </div>
 
 
-    <!-- RIGHT PANEL -->
+    <!-- ==================== RIGHT PANEL ====================
+         Scrollable column of five sections: Craft, Tooling, Experience,
+         Philosophy, and Navigate. Each .sec starts at opacity:0 and
+         translateY(10px), animated in by a GSAP stagger after the loader exits. -->
     <div class="right-panel">
 
-        <!-- Craft / Skills -->
+        <!-- ── Craft / Skills ──
+             Skill bars use data-w attributes to store target widths as percentages.
+             JS reads these and sets .skill-fill width, which CSS transitions to
+             animate the bars growing from 0% to their target on page load. -->
         <div class="sec" id="s1">
             <div class="sec-label">Craft</div>
+            <!-- Each row: label | bar track (with fill) | percentage text -->
             <div class="skill-row">
                 <span class="skill-name">UI / UX</span>
                 <div class="skill-track"><div class="skill-fill" data-w="92"></div></div>
@@ -120,7 +171,9 @@
             </div>
         </div>
 
-        <!-- Tooling -->
+        <!-- ── Tooling ──
+             Flex-wrapped tag pills listing tools and technologies.
+             Each has hover-el class for cursor interaction + border/colour hover via CSS. -->
         <div class="sec" id="s2">
             <div class="sec-label">Tooling</div>
             <div class="tags">
@@ -137,7 +190,9 @@
             </div>
         </div>
 
-        <!-- Experience -->
+        <!-- ── Experience ──
+             2-column grid layout per item: [year range | role + company].
+             exp-yr uses line-break within the text (HTML br equivalent via CSS line-height). -->
         <div class="sec" id="s3">
             <div class="sec-label">Experience</div>
             <div class="exp-item">
@@ -162,7 +217,9 @@
             </div>
         </div>
 
-        <!-- Philosophy -->
+        <!-- ── Philosophy ──
+             A pull-quote styled with a left accent-colour border.
+             <strong> tags highlight the key phrase with increased weight and opacity. -->
         <div class="sec" id="s4">
             <div class="sec-label">Philosophy</div>
             <p class="pull-quote">
@@ -173,27 +230,28 @@
             </p>
         </div>
 
-        <!-- Navigate -->
+        <!-- ── Navigate ──
+             Internal navigation links rendered as full-width rows.
+             ::before pseudo-element draws a subtle background sweep on hover.
+             .larr (arrow) animates diagonally on hover via CSS transform. -->
         <div class="sec" id="s5">
             <div class="sec-label">Navigate</div>
             <a href="work.html" class="nav-link-row hover-el">
                 <span class="ltxt">Selected Work</span><span class="larr">↗</span>
             </a>
-            <a href="archive.html" class="nav-link-row hover-el">
-                <span class="ltxt">The Archive</span><span class="larr">↗</span>
-            </a>
-            <a href="gallery.html" class="nav-link-row hover-el">
-                <span class="ltxt">Gallery</span><span class="larr">↗</span>
-            </a>
             <a href="contact.html" class="nav-link-row hover-el">
                 <span class="ltxt">Contact</span><span class="larr">↗</span>
+            </a>
+            <a href="about.html" class="nav-link-row hover-el">
+                <span class="ltxt">About</span><span class="larr">↗</span>
             </a>
         </div>
 
     </div>
 
-</div><!-- end page -->
+</div><!-- end .page -->
 
+<!-- GSAP loaded before the custom script so gsap and gsap.ticker are available -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="js/profile.js"></script>
 </body>

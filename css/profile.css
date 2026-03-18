@@ -1,55 +1,88 @@
+/* ── Google Fonts ──
+   Space Grotesk: weights 300 (light), 400 (regular), 500 (medium),
+   600 (semi-bold), 700 (bold). Used throughout for all text. */
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
+
+/* ─── RESET ──────────────────────────────────────────────────────────────────
+   Universal box-sizing reset ensures padding and borders don't add to element
+   dimensions, making layout calculations straightforward. */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+
+/* ─── DESIGN TOKENS ──────────────────────────────────────────────────────────
+   NOTE: --black and --white are intentionally swapped from their names here —
+   this is a light-mode design where the "background" is cream (#f0ede8) and
+   the "foreground" is near-black (#0e0e0e). The variable names reflect the
+   role rather than the literal colour.
+
+   --accent: a warm brown used for labels, highlights, and interactive states. */
 :root {
-    --black: #f0ede8;
-    --white: #0e0e0e;
-    --gray: #aaa;
-    --mid: #666;
-    --accent: #6b5b45;
-    --font: 'Space Grotesk', sans-serif;
+    --black:  #f0ede8;               /* Cream — used as background colour */
+    --white:  #0e0e0e;               /* Near-black — used as foreground/text */
+    --gray:   #aaa;                  /* Light grey for secondary text */
+    --mid:    #666;                  /* Mid-grey for tertiary / subdued text */
+    --accent: #6b5b45;               /* Warm brown for labels and interactive accents */
+    --font:   'Space Grotesk', sans-serif;
 }
 
+/* Prevent the browser's native scrollbar from appearing.
+   Scroll is disabled entirely on this page — the right panel handles overflow internally. */
 html { overflow: hidden; }
+
 body {
     font-family: var(--font);
-    background: #f0ede8;
+    background: #f0ede8;             /* Warm cream background */
     color: #0e0e0e;
     height: 100vh; width: 100vw;
-    overflow: hidden;
-    cursor: none;
+    overflow: hidden;                /* No page-level scroll; right panel scrolls independently */
+    cursor: none;                    /* Hide OS cursor — replaced by custom JS cursor */
     -webkit-font-smoothing: antialiased;
 }
-body::-webkit-scrollbar { display: none; }
+body::-webkit-scrollbar { display: none; } /* Belt-and-suspenders: hide scrollbar if it appears */
 
-/* ── GRAIN ── */
+
+/* ─── GRAIN OVERLAY ──────────────────────────────────────────────────────────
+   An animated SVG fractal-noise texture fixed over the entire viewport.
+   mix-blend-mode: multiply blends it with the light cream background for
+   a subtle paper-grain look.
+   The @keyframes gn shifts it by 1–2% every few frames, making the grain
+   appear to shimmer like physical film grain. */
 .grain {
     position: fixed; inset: 0; z-index: 8000;
     pointer-events: none;
     opacity: 0.22; mix-blend-mode: multiply;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 600 600' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
-    animation: gn 0.08s steps(1) infinite;
+    animation: gn 0.08s steps(1) infinite; /* steps(1) = instant frame jump, no easing */
 }
 @keyframes gn {
-    0%  { transform: translate(0,0) }
-    25% { transform: translate(-2%,1%) }
-    50% { transform: translate(1%,-2%) }
-    75% { transform: translate(-1%,-1%) }
+    0%  { transform: translate(0,0); }
+    25% { transform: translate(-2%,1%); }
+    50% { transform: translate(1%,-2%); }
+    75% { transform: translate(-1%,-1%); }
 }
 
-/* ── SCANLINES ── */
+
+/* ─── SCANLINES ──────────────────────────────────────────────────────────────
+   A repeating linear gradient that draws alternating 2px transparent / 2px
+   near-black bands across the whole page — a subtle CRT/editorial texture.
+   Very low opacity (0.03 per line) so it's barely perceptible but adds depth. */
 .scanlines {
     position: fixed; inset: 0; z-index: 7900;
     pointer-events: none;
     background: repeating-linear-gradient(
         to bottom,
-        transparent 0px, transparent 2px,
-        rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
+        transparent 0px, transparent 2px,         /* 2px gap */
+        rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px /* 2px line */
     );
 }
 
-/* ── VERTICAL GRID LINES ── */
+
+/* ─── VERTICAL GRID LINES ────────────────────────────────────────────────────
+   12 invisible column spans rendered as a CSS grid to display faint
+   right-border lines at each column boundary. This echoes the underlying
+   design grid used during layout, giving the page a structured graphic rhythm.
+   z-index: 1 keeps it below all content. */
 .vlines {
     position: fixed; inset: 0;
     pointer-events: none; z-index: 1;
@@ -58,7 +91,12 @@ body::-webkit-scrollbar { display: none; }
 }
 .vlines span { border-right: 1px solid rgba(0,0,0,0.05); }
 
-/* ── CURSOR ── */
+
+/* ─── CUSTOM CURSOR ──────────────────────────────────────────────────────────
+   A small 10px dot that replaces the OS cursor.
+   Position is driven by GSAP (lerped toward mouse position each tick).
+   .hover class is added by JS when the cursor is over interactive elements,
+   scaling the dot up 3.5× for a visual affordance. */
 .custom-cursor {
     position: fixed;
     width: 10px; height: 10px;
@@ -69,25 +107,38 @@ body::-webkit-scrollbar { display: none; }
     transition: transform 0.15s ease, opacity 0.15s ease;
 }
 .custom-cursor.hover {
-    transform: scale(3.5);
+    transform: scale(3.5); /* Grows when hovering interactive elements */
 }
 
-/* ── LOADER ── */
+
+/* ─── LOADER ─────────────────────────────────────────────────────────────────
+   Full-screen overlay matching the page background colour.
+   Sits above everything at z-index 9998.
+   GSAP animates .loader-word in, holds, then scales/fades it out,
+   then fades the whole .loader div to opacity 0 before hiding it via display:none. */
 .loader {
     position: fixed; inset: 0; z-index: 9998;
     background: #f0ede8;
     display: flex; align-items: center; justify-content: center;
 }
+
+/* The "PROFILE." text: starts invisible and 40px above its final position.
+   clamp() gives it a fluid size that scales between 90px and 240px. */
 .loader-word {
     font-size: clamp(90px, 16vw, 240px);
     font-weight: 700;
     letter-spacing: -0.05em;
     color: #0e0e0e;
     opacity: 0;
-    transform: translateY(-40px);
+    transform: translateY(-40px); /* GSAP animates this to 0 */
 }
 
-/* ── TICKER ── */
+
+/* ─── TICKER ─────────────────────────────────────────────────────────────────
+   Fixed bottom bar with a continuously scrolling keyword marquee.
+   Height: 34px. .ticker-track is duplicated by JS (words × 2) so the
+   translateX(-50%) animation loops seamlessly — when the first copy exits,
+   the identical second copy is already in place. */
 .ticker {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -95,7 +146,7 @@ body::-webkit-scrollbar { display: none; }
     border-top: 1px solid rgba(0,0,0,0.1);
     overflow: hidden; z-index: 500;
     display: flex; align-items: center;
-    background: rgba(240,237,232,0.9);
+    background: rgba(240,237,232,0.9); /* Slightly transparent to hint at content below */
 }
 .ticker-track {
     display: flex;
@@ -109,10 +160,22 @@ body::-webkit-scrollbar { display: none; }
     color: #aaa;
     padding: 0 28px;
 }
+/* Separator dots styled in the accent colour and slightly larger */
 .ticker-track span.sep { color: var(--accent); padding: 0 8px; font-size: 10px; }
+
+/* Scroll exactly one full copy's width — the JS duplicates the content so
+   translateX(-50%) returns to the visual start position. */
 @keyframes tscroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-/* ── PAGE GRID ── */
+
+/* ─── PAGE GRID ──────────────────────────────────────────────────────────────
+   Three-column layout:
+   col 1 (48px)  — narrow index strip
+   col 2 (1fr)   — left hero panel
+   col 3 (370px) — right content panel
+
+   inset: 0 0 34px 0 — the 34px bottom gap leaves room for the ticker bar.
+   Starts at opacity: 0, revealed by GSAP after the loader exits. */
 .page {
     position: fixed; inset: 0 0 34px 0;
     opacity: 0;
@@ -121,7 +184,11 @@ body::-webkit-scrollbar { display: none; }
     z-index: 100;
 }
 
-/* ── INDEX STRIP ── */
+
+/* ─── INDEX STRIP ────────────────────────────────────────────────────────────
+   48px wide decorative column on the far left.
+   Contains a vertical page title and a page number indicator.
+   writing-mode: vertical-rl + rotate(180deg) produces bottom-to-top text. */
 .index-strip {
     border-right: 1px solid rgba(0,0,0,0.08);
     display: flex; flex-direction: column;
@@ -130,7 +197,7 @@ body::-webkit-scrollbar { display: none; }
 }
 .idx-label {
     writing-mode: vertical-rl;
-    transform: rotate(180deg);
+    transform: rotate(180deg); /* Flip direction so text reads bottom-to-top */
     font-size: 7.5px;
     letter-spacing: 0.22em;
     text-transform: uppercase;
@@ -142,9 +209,13 @@ body::-webkit-scrollbar { display: none; }
     color: rgba(0,0,0,0.15);
 }
 
-/* ── LEFT PANEL ── */
+
+/* ─── LEFT PANEL ─────────────────────────────────────────────────────────────
+   Main hero/identity column.
+   overflow: hidden clips the ghost name that extends beyond the panel boundaries.
+   flex column with gap between sections provided by padding rather than gap. */
 .left-panel {
-    position: relative;
+    position: relative;       /* Positioning context for .ghost-name */
     display: flex; flex-direction: column;
     padding: 28px 36px;
     border-right: 1px solid rgba(0,0,0,0.08);
@@ -152,21 +223,26 @@ body::-webkit-scrollbar { display: none; }
     gap: 0;
 }
 
-/* Ghost background name */
+/* Ghost background name: large outlined text behind the panel content.
+   -webkit-text-stroke: 1px draws an outline without filling the letterforms.
+   pointer-events: none + user-select: none make it completely non-interactive. */
 .ghost-name {
     position: absolute;
-    bottom: 20px; left: -0.03em;
+    bottom: 20px; left: -0.03em; /* Slight negative offset for optical alignment */
     font-size: clamp(100px, 13.5vw, 175px);
     font-weight: 700;
     letter-spacing: -0.05em;
     line-height: 1;
     color: transparent;
-    -webkit-text-stroke: 1px rgba(0,0,0,0.06);
+    -webkit-text-stroke: 1px rgba(0,0,0,0.06); /* Outlined with 6% opacity */
     pointer-events: none; user-select: none;
     white-space: nowrap;
 }
 
-/* ── TOP ROW ── */
+
+/* ─── TOP ROW ────────────────────────────────────────────────────────────────
+   Flex row: back link on the left, status/time meta on the right.
+   flex-shrink: 0 prevents it from shrinking when .hero-block needs space. */
 .top-row {
     display: flex;
     justify-content: space-between;
@@ -174,6 +250,9 @@ body::-webkit-scrollbar { display: none; }
     flex-shrink: 0;
 }
 
+/* Back link: subtle uppercase text with a growing underline on hover.
+   ::after pseudo-element starts at width: 0 and expands to 100% on hover
+   using a spring-like cubic-bezier easing. */
 .back-link {
     cursor: none;
     position: relative;
@@ -186,31 +265,31 @@ body::-webkit-scrollbar { display: none; }
     padding-top: 2px;
     display: inline-block;
 }
-
-/* underline animation */
 .back-link::after {
     content: '';
     position: absolute;
     left: 0;
     bottom: -3px;
-    width: 0%;
+    width: 0%;               /* Starts collapsed */
     height: 1px;
     background: var(--accent);
-    transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1); /* Spring ease — overshoot feel */
 }
-
-/* hover state */
 .back-link:hover {
     color: #0e0e0e;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.22em;  /* Letter-spacing increases slightly on hover */
 }
-
 .back-link:hover::after {
-    width: 100%;
+    width: 100%; /* Underline slides in from left to right */
 }
 
 
-/* ── TIMESTAMP BLOCK (replaces photo) ── */
+/* ─── TIMESTAMP / STATUS BLOCK ───────────────────────────────────────────────
+   Right-aligned meta info: availability status, live clock, location.
+   The clock value is updated every second by JS using Intl.DateTimeFormat.
+
+   .time-clock, .time-label, .time-date are defined but used as part of
+   an alternate layout variant (the .top-meta div uses simpler inline structure). */
 .time-block {
     display: flex;
     flex-direction: column;
@@ -225,7 +304,7 @@ body::-webkit-scrollbar { display: none; }
     letter-spacing: -0.03em;
     color: #0e0e0e;
     line-height: 1;
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: tabular-nums; /* Fixed-width digits prevent layout shifting as seconds change */
 }
 .time-label {
     font-size: 7.5px;
@@ -241,44 +320,66 @@ body::-webkit-scrollbar { display: none; }
     margin-top: 2px;
 }
 
+/* Pulsing green dot indicating active availability.
+   @keyframes blink oscillates between full and 25% opacity every 2 seconds. */
 .live-dot {
     display: inline-block; width: 5px; height: 5px;
     border-radius: 50%; background: #1aaa55;
     margin-right: 5px; vertical-align: middle;
     animation: blink 2s ease-in-out infinite;
 }
-@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+@keyframes blink { 0%,100%{ opacity: 1; } 50%{ opacity: 0.25; } }
 
-/* ── HERO ── */
+
+/* ─── HERO BLOCK ─────────────────────────────────────────────────────────────
+   Flexbox column that grows to fill available vertical space (flex: 1).
+   justify-content: center keeps the content vertically centred in the panel.
+   All children start at opacity: 0 and are revealed by the GSAP timeline. */
 .hero-block {
     flex: 1;
     display: flex; flex-direction: column;
     justify-content: center;
     padding: 20px 0 12px;
 }
+
+/* Small uppercase eyebrow label above the name */
 .hero-eyebrow {
     font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase;
-    color: var(--accent); margin-bottom: 14px; opacity: 0;
+    color: var(--accent); margin-bottom: 14px; opacity: 0; /* GSAP reveals */
 }
+
+/* Main heading: fluid font size between 46px and 84px.
+   overflow: hidden on the parent clips the .ln elements that start at
+   translateY(110%) so they slide in from below without showing above. */
 .hero-name {
     font-size: clamp(46px, 6vw, 84px);
     font-weight: 700; letter-spacing: -0.04em;
     line-height: 0.92; margin-bottom: 20px; overflow: hidden;
     color: #0e0e0e;
 }
+/* Each line of the name slides up independently via GSAP stagger */
 .hero-name .ln { display: block; opacity: 0; transform: translateY(110%); }
+
+/* Discipline tags line */
 .hero-sub {
     font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
     color: var(--mid); margin-bottom: 24px; opacity: 0;
 }
+/* The · separator dots are dimmed compared to the text */
 .hero-sub span { color: rgba(0,0,0,0.2); margin: 0 10px; }
+
+/* Bio text: light weight, generously line-spaced, slightly transparent */
 .hero-bio {
     font-size: clamp(12px, 1.1vw, 14px);
     line-height: 1.9; color: rgba(14,14,14,0.5);
     max-width: 460px; font-weight: 300; opacity: 0;
 }
 
-/* ── HR LABELED ── */
+
+/* ─── LABELED DIVIDER ────────────────────────────────────────────────────────
+   A flex row with a text label on the left and a line extending to the right.
+   The line is drawn by ::after (flex: 1 makes it fill remaining width).
+   Starts at opacity: 0, revealed by GSAP. */
 .hr-labeled {
     display: flex; align-items: center;
     gap: 12px; margin: 20px 0; opacity: 0; flex-shrink: 0;
@@ -292,8 +393,13 @@ body::-webkit-scrollbar { display: none; }
     background: rgba(0,0,0,0.08);
 }
 
-/* ── STATS ── */
-.stats-row { display: flex; opacity: 0; flex-shrink: 0; }
+
+/* ─── STATS ROW ──────────────────────────────────────────────────────────────
+   Three equal-width stat blocks in a row.
+   Border-top gives each a separator line; border-right between items.
+   The last child removes its right border and adjusts padding.
+   Hovering a stat changes the number to the accent colour via CSS transition. */
+.stats-row { display: flex; opacity: 0; flex-shrink: 0; } /* GSAP reveals */
 .stat-item {
     flex: 1; padding: 14px 0;
     border-top: 1px solid rgba(0,0,0,0.08);
@@ -307,23 +413,30 @@ body::-webkit-scrollbar { display: none; }
     font-weight: 700; letter-spacing: -0.05em;
     line-height: 1; color: #0e0e0e; transition: color 0.3s;
 }
-.stat-item:hover .stat-n { color: var(--accent); }
+.stat-item:hover .stat-n { color: var(--accent); } /* Accent on hover */
 .stat-l {
     font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase;
     color: #aaa; margin-top: 4px;
 }
 
-/* ── RIGHT PANEL ── */
+
+/* ─── RIGHT PANEL ────────────────────────────────────────────────────────────
+   Scrollable column (overflow-y: auto) for the five content sections.
+   Scrollbar is hidden for a clean appearance; keyboard/touch scrolling still works.
+   Starts at z-index 100 (same as .page), separate from the fixed overlays. */
 .right-panel {
     display: flex; flex-direction: column;
     padding: 28px 26px 0;
-    overflow-y: auto; scrollbar-width: none;
+    overflow-y: auto; scrollbar-width: none; /* Firefox */
     border-left: 1px solid rgba(0,0,0,0.08);
 }
-.right-panel::-webkit-scrollbar { display: none; }
+.right-panel::-webkit-scrollbar { display: none; } /* Chrome / Safari */
 
+/* Each section starts at opacity:0 and translateY(10px).
+   GSAP staggers them into their final state after the page reveal. */
 .sec { margin-bottom: 26px; opacity: 0; transform: translateY(10px); }
 
+/* Section label with a line extending to the right (same ::after pattern as .hr-labeled) */
 .sec-label {
     font-size: 8px; letter-spacing: 0.28em; text-transform: uppercase;
     color: var(--accent); margin-bottom: 12px;
@@ -334,7 +447,14 @@ body::-webkit-scrollbar { display: none; }
     background: rgba(0,0,0,0.08);
 }
 
-/* Skills */
+
+/* ─── SKILL BARS ─────────────────────────────────────────────────────────────
+   Each row: flex layout with three elements:
+   [skill-name (fixed width)] [skill-track (flexible bar)] [skill-pct (fixed right)]
+
+   .skill-fill starts at width: 0% and transitions to the data-w% value
+   set by JS (e.g. data-w="92" → width: 92%).
+   The gradient fades from solid accent to 35% opacity for a subtle effect. */
 .skill-row {
     display: flex; align-items: center;
     justify-content: space-between;
@@ -348,11 +468,14 @@ body::-webkit-scrollbar { display: none; }
     position: absolute; top: 0; left: 0; height: 100%;
     background: linear-gradient(to right, var(--accent), rgba(107,91,69,0.35));
     width: 0%;
-    transition: width 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: width 1.6s cubic-bezier(0.16, 1, 0.3, 1); /* Smooth spring-like grow */
 }
 .skill-pct { font-size: 8px; letter-spacing: 0.06em; color: #aaa; flex-shrink: 0; width: 26px; text-align: right; }
 
-/* Tooling */
+
+/* ─── TOOLING TAGS ───────────────────────────────────────────────────────────
+   Flex-wrapped pill tags for tool/technology labels.
+   Border and text colour shift to accent on hover for interactive feedback. */
 .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
 .tag {
     font-size: 7.5px; letter-spacing: 0.16em; text-transform: uppercase;
@@ -362,7 +485,10 @@ body::-webkit-scrollbar { display: none; }
 }
 .tag:hover { border-color: var(--accent); color: var(--accent); }
 
-/* Experience */
+
+/* ─── EXPERIENCE ITEMS ───────────────────────────────────────────────────────
+   Two-column grid per item: [68px year column] [flexible text column].
+   A bottom border separates each entry from the next. */
 .exp-item {
     display: grid; grid-template-columns: 68px 1fr;
     gap: 12px; padding: 10px 0;
@@ -372,7 +498,11 @@ body::-webkit-scrollbar { display: none; }
 .exp-role { font-size: 9.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #0e0e0e; margin-bottom: 2px; }
 .exp-co { font-size: 9px; font-weight: 300; color: var(--mid); letter-spacing: 0.05em; }
 
-/* Pull quote */
+
+/* ─── PULL QUOTE ─────────────────────────────────────────────────────────────
+   Blockquote-style section with a 2px left accent border.
+   Light font weight and low opacity body text contrasts with <strong> elements
+   that are darker (0.85 opacity) and heavier (600 weight). */
 .pull-quote {
     font-size: clamp(12px, 1.2vw, 14px);
     font-weight: 300; line-height: 1.85;
@@ -382,34 +512,51 @@ body::-webkit-scrollbar { display: none; }
 }
 .pull-quote strong { font-weight: 600; color: rgba(14,14,14,0.85); }
 
-/* Nav links */
+
+/* ─── NAVIGATION LINK ROWS ───────────────────────────────────────────────────
+   Full-width link rows with a label on the left and an arrow on the right.
+   ::before pseudo-element creates a background sweep on hover:
+   starts at width: 0, expands to 100% with a spring cubic-bezier.
+   The ↗ arrow shifts 3px right and 3px up on hover (diagonal motion). */
 .nav-link-row {
     display: flex; justify-content: space-between; align-items: center;
     padding: 10px 0;
     border-bottom: 1px solid rgba(0,0,0,0.06);
     text-decoration: none; color: #0e0e0e;
     transition: color 0.25s; cursor: none;
-    position: relative; overflow: hidden;
+    position: relative; overflow: hidden; /* Clips the ::before sweep */
 }
 .nav-link-row::before {
     content: ''; position: absolute;
     left: 0; top: 0; bottom: 0; width: 0;
-    background: rgba(107,91,69,0.06);
+    background: rgba(107,91,69,0.06); /* Very subtle warm tint on hover */
     transition: width 0.4s cubic-bezier(0.16,1,0.3,1);
 }
 .nav-link-row:hover::before { width: 100%; }
 .nav-link-row:hover { color: var(--accent); }
+/* Arrow animates diagonally — translate(3px, -3px) = 3px right, 3px up */
 .nav-link-row:hover .larr { transform: translate(3px,-3px); color: var(--accent); }
 .ltxt { font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; }
-.larr { font-size: 11px; color: #bbb; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), color 0.25s; }
+.larr {
+    font-size: 11px; color: #bbb;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), color 0.25s;
+    /* cubic-bezier(0.34,1.56,0.64,1) = slight overshoot/spring for the diagonal jump */
+}
 
-/* ── RESPONSIVE ── */
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────────────────────
+   Below 960px (tablet / mobile):
+   - Restore native cursor and scrolling
+   - Stack the three grid columns into a single column
+   - Hide the narrow index strip
+   - Remove panel borders (replaced by top/bottom borders)
+   - Let the right panel overflow naturally instead of scrolling in a fixed area */
 @media (max-width: 960px) {
     body { cursor: auto; overflow: auto; }
     html { overflow: auto; }
-    .custom-cursor { display: none; }
+    .custom-cursor { display: none; } /* No custom cursor on touch devices */
     .page { position: relative; grid-template-columns: 1fr; height: auto; inset: auto; }
-    .index-strip { display: none; }
+    .index-strip { display: none; }   /* Remove the 48px side strip on small screens */
     .left-panel { min-height: 85vh; border-right: none; border-bottom: 1px solid rgba(0,0,0,0.08); }
     .right-panel { overflow: visible; border-left: none; border-top: 1px solid rgba(0,0,0,0.08); }
     .top-row { grid-template-columns: 1fr auto; }

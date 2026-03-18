@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — Zahra Muhammad</title>
+
+  <!-- Google Fonts:
+       Space Grotesk (700)         — display headings, CTA button
+       DM Mono (300/400/500)       — labels, counter, nav links
+       DM Sans (italic + optical)  — body paragraphs and descriptions -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;1,9..40,300&display=swap" rel="stylesheet">
+
+  <!-- GSAP loaded in <head> so the intro timeline fires immediately on DOMContentLoaded -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <link rel="stylesheet" href="css/about.css">
+</head>
+<body>
+
+  <!-- ==================== NOISE CANVAS ====================
+       Live film-grain texture drawn each rAF frame via canvas pixel manipulation.
+       Identical implementation to works.html — see about.js for the draw loop.
+       z-index: 9999, opacity: 0.03 — barely visible but adds tactile depth. -->
+  <canvas id="noiseCanvas"></canvas>
+
+  <!-- ==================== CUSTOM CURSORS ====================
+       Two cursor layers moved together by GSAP on mousemove:
+       1. cursor-dot      — 8px white dot (primary cursor replacement)
+       2. cursor-scroll-ring — 72px rotating SVG ring with "ABOUT · ABOUT ·" text
+          The ring's <textPath> follows #circlePath so the label orbits the circle.
+          ring-dot is a small filled circle that travels with the rotating SVG.
+       Both start at top:0 left:0 and are positioned by GSAP x/y transforms. -->
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-scroll-ring" id="cursorScrollRing">
+    <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Circular arc path used as the baseline for the orbiting text -->
+        <path id="circlePath" d="M 36,36 m -26,0 a 26,26 0 1,1 52,0 a 26,26 0 1,1 -52,0"/>
+      </defs>
+      <!-- Faint background ring stroke -->
+      <circle cx="36" cy="36" r="28" stroke="rgba(240,237,232,0.18)" stroke-width="0.75"/>
+      <!-- Small dot that orbits as the SVG rotates via CSS animation -->
+      <circle class="ring-dot" cx="36" cy="10" r="2"/>
+      <!-- Repeating label that follows the circular path -->
+      <text>
+        <textPath class="ring-text" href="#circlePath" startOffset="0%">
+          ABOUT · ABOUT · ABOUT · ABOUT ·
+        </textPath>
+      </text>
+    </svg>
+  </div>
+
+  <!-- ==================== INTRO LOADER ====================
+       White full-screen overlay shown before the page content appears.
+       Matches the works.html intro pattern exactly.
+       "ABOUT." text starts at opacity:0 and translateY(24px).
+       GSAP animates it in, holds, then fades the overlay out.
+       JS sets display:none on complete and calls startHeroEntrance(). -->
+  <div class="intro-overlay" id="introOverlay">
+    <div class="intro-text" id="introText">ABOUT.</div>
+  </div>
+
+  <!-- ==================== TEXTURE LAYER ====================
+       #tex uses two pseudo-elements (::before and ::after) to add
+       a fine linen texture and a secondary animated grain layer.
+       Both use SVG fractal noise at different frequencies/scales.
+       z-index: 2 sits just above the background but below all content. -->
+  <div id="tex"></div>
+
+  <!-- ==================== MAIN NAV ====================
+       Fixed top bar, revealed by GSAP after the intro loader exits.
+       mix-blend-mode: difference keeps the white text readable on any background.
+       The back arrow shifts -5px on hover via CSS transform transition. -->
+  <nav id="mainNav">
+    <a href="index.html" class="nav-back" id="navBack">
+      <span class="back-arrow">&#8592;</span>Back to Home
+    </a>
+  </nav>
+
+  <!-- ==================== SIDE NAV ====================
+       Vertical list of section markers on the right edge.
+       Each .sn has:
+       - data-i: the section index it navigates to
+       - sn-label: Roman numeral (I–VI)
+       - sn-pip: a small dot that expands into a short bar when the section is active
+       JS adds/removes .on class; CSS transitions the pip width. -->
+  <div id="sidenav">
+    <div class="sn on" data-i="0"><span class="sn-label">I</span><span class="sn-pip"></span></div>
+    <div class="sn"    data-i="1"><span class="sn-label">II</span><span class="sn-pip"></span></div>
+    <div class="sn"    data-i="2"><span class="sn-label">III</span><span class="sn-pip"></span></div>
+    <div class="sn"    data-i="3"><span class="sn-label">IV</span><span class="sn-pip"></span></div>
+    <div class="sn"    data-i="4"><span class="sn-label">V</span><span class="sn-pip"></span></div>
+    <div class="sn"    data-i="5"><span class="sn-label">VI</span><span class="sn-pip"></span></div>
+  </div>
+
+  <!-- ==================== SCROLL HINT + SECTION COUNTER ====================
+       scrollhint: bottom-left "Scroll" label with an animated pulsing line.
+       Fades to opacity:0 when moving past section 1 (not needed once navigating).
+       sec-counter: bottom-right "01 / 06" style counter.
+       #cn is updated by JS via gotoSec() to show the current section number. -->
+  <div id="scrollhint"><div class="sh-line"></div>Scroll</div>
+  <div id="sec-counter"><span id="cn">01</span> / 06</div>
+
+  <!-- ==================== SECTIONS WRAPPER ====================
+       position: fixed; inset: 0 — all sections stack on top of each other.
+       Only the active .sec.on has pointer-events: all (others are inert).
+       GSAP translates sections in/out vertically via gotoSec(). -->
+  <div id="wrap">
+
+    <!-- ── SECTION 01: INTRO ──────────────────────────────────────────────
+         The first section shown after the loader exits.
+         The large heading uses .wl (line wrapper with overflow:hidden) +
+         .wi (word inner) so each word slides up from translateY(110%)
+         during the hero entrance animation in startHeroEntrance(). -->
+    <div class="sec s01 on" id="s01">
+      <div class="sec-inner">
+        <p class="sec-label">About — Zahra</p>
+        <h1 class="s01-h">
+          <!-- Each .wl clips its .wi; GSAP animates .wi from y:110% to y:0% -->
+          <span class="wl"><span class="wi" id="w1">About</span></span>
+          <span class="wl"><span class="wi" id="w2">this</span></span>
+          <span class="wl"><span class="wi" id="w3">portfolio.</span></span>
+        </h1>
+        <p class="s01-desc" id="s1d">Not just what I make —<br>but <strong>why</strong> I make it.</p>
+      </div>
+    </div>
+
+    <!-- ── SECTION 02: ORIGIN ─────────────────────────────────────────────
+         Two-column grid: heading + colour bar on the left, bio text on the right.
+         .colour-bar starts at width:0 and is animated to width:40px by GSAP.
+         enterSec(1) triggers the staggered entrance of heading, bar, and text. -->
+    <div class="sec s02" id="s02">
+      <div class="s02-grid">
+        <div class="s02-left">
+          <span class="sec-label">II — Origin</span>
+          <h2 class="s02-h" id="s2h">
+            Born<br>to<br><span class="dim-word">notice.</span>
+            <!-- .dim-word applies reduced opacity colour for the third line -->
+          </h2>
+          <!-- Animated accent line; width grows from 0 to 40px via GSAP -->
+          <span class="colour-bar" id="s2b"></span>
+        </div>
+        <div class="s02-right" id="s2r">
+          <p>I grew up noticing everything — the <strong>weight of a typeface</strong>, a misplaced pixel, the friction of a button placed slightly wrong.</p>
+          <p>I studied <strong>Creative Computing</strong> at Bath Spa University — to understand <strong>how sensation is engineered.</strong></p>
+          <p>Based in the <strong>UAE</strong>, working globally across web, illustration, mobile, and interactive.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECTION 03: BELIEF (light panel) ──────────────────────────────
+         Background switches to a light cream (#eeebe3) for contrast.
+         The philosophy quote uses the same .ql / .qi clip-and-slide technique
+         as the big title — each line starts at translateY(100%) and slides up.
+         .u-rose and .u-sage apply coloured underlines to key phrases. -->
+    <div class="sec s03" id="s03">
+      <div class="sec-inner">
+        <p class="sec-label light">III — Belief</p>
+        <p class="s03-q">
+          <!-- Each .ql (quote line) clips its .qi (quote inner) for slide-up reveal -->
+          <span class="ql"><span class="qi" id="q1">Design is not decoration.</span></span>
+          <span class="ql"><span class="qi" id="q2">It is the space between a question</span></span>
+          <span class="ql"><span class="qi" id="q3">and its <span class="u-rose">most honest answer.</span></span></span>
+          <span class="ql"><span class="qi">&nbsp;</span></span><!-- Empty line for spacing -->
+          <span class="ql"><span class="qi" id="q5">I build things that feel <span class="u-sage">inevitable.</span></span></span>
+        </p>
+        <!-- Attribution line fades in after the quote lines via GSAP -->
+        <p class="s03-sig" id="s3sg">— Zahra Muhammad</p>
+      </div>
+    </div>
+
+    <!-- ── SECTION 04: PROCESS ────────────────────────────────────────────
+         Three-row process table. Each .proc-row slides in from x:-24 via GSAP.
+         .proc-row:hover indents 14px to the left via CSS padding-left transition.
+         .c1/.c2/.c3 apply accent colours (rose/sage/sky) to the step numbers.
+         The magnetic pull effect in JS adds a subtle cursor-following shift. -->
+    <div class="sec s04" id="s04">
+      <div class="sec-inner wide">
+        <p class="sec-label" id="s4l">IV — How I work</p>
+        <div class="proc-table">
+          <div class="proc-row" id="p1">
+            <span class="proc-n c1">01</span>
+            <span class="proc-t">Obsess</span>
+            <p class="proc-b">Live inside the problem before solving it.</p>
+          </div>
+          <div class="proc-row" id="p2">
+            <span class="proc-n c2">02</span>
+            <span class="proc-t">Distil</span>
+            <p class="proc-b">Strip everything until only the essential remains.</p>
+          </div>
+          <div class="proc-row" id="p3">
+            <span class="proc-n c3">03</span>
+            <span class="proc-t">Charge</span>
+            <p class="proc-b">Give the solution atmosphere, tension, life.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECTION 05: OBSESSIONS ─────────────────────────────────────────
+         A cloud of large words, each with a data-c attribute mapping to the CM
+         colour object in JS. Words start nearly invisible (opacity ~0.11) and
+         glow to their accent colour on hover via GSAP.
+         The enterSec(4) animation resets and staggers them in from y:22. -->
+    <div class="sec s05" id="s05">
+      <p class="sec-label" id="s5l">V — Obsessions</p>
+      <div class="obs-wrap">
+        <!-- data-c maps to colour keys in the CM object (CM.rose, CM.sage, etc.) -->
+        <span class="ow" data-c="rose">Motion</span>
+        <span class="ow" data-c="sage">Ink</span>
+        <span class="ow" data-c="butter">Silence</span>
+        <span class="ow" data-c="sky">Structure</span>
+        <span class="ow" data-c="lilac">Detail</span>
+        <span class="ow" data-c="peach">Contrast</span>
+        <span class="ow" data-c="rose">Ritual</span>
+        <span class="ow" data-c="sage">Atmosphere</span>
+        <span class="ow" data-c="butter">Weight</span>
+        <span class="ow" data-c="sky">Edge</span>
+        <span class="ow" data-c="lilac">Precision</span>
+        <span class="ow" data-c="peach">Darkness</span>
+      </div>
+    </div>
+
+    <!-- ── SECTION 06: CTA ────────────────────────────────────────────────
+         Final section with a large heading and a "View Portfolio" button.
+         #c1 and #c2 use the same .wl/.wi slide-up pattern as section 01.
+         .s06-btn has a rose-coloured ::before fill that sweeps in on hover
+         (translateX from -101% to 0), inverting the button appearance. -->
+    <div class="sec s06" id="s06">
+      <div class="sec-inner">
+        <p class="s06-ey" id="s6e">VI — Now</p>
+        <h2 class="s06-h">
+          <span class="wl"><span class="wi" id="c1">See</span></span>
+          <!-- .dim-word renders "the work." in a dimmer colour -->
+          <span class="wl"><span class="wi dim-word" id="c2">the work.</span></span>
+        </h2>
+        <!-- Button: <span> inside is z-index:1 to sit above the ::before fill sweep -->
+        <a href="work.html" class="s06-btn" id="s6btn">
+          <span>View Portfolio</span><span class="btn-arrow">&#8599;</span>
+        </a>
+      </div>
+    </div>
+
+  </div><!-- end #wrap -->
+
+  <!-- about.js loaded last so all DOM elements exist when the script runs -->
+  <script src="js/about.js"></script>
+</body>
+</html>

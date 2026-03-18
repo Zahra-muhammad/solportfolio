@@ -4,27 +4,52 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gallery</title>
+
+  <!-- Google Fonts:
+       Bebas Neue  — large display numerals and headings
+       DM Sans     — lightweight body and UI text (italic + optical sizes)
+       Space Grotesk — bold intro text on the splash screen -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;1,9..40,300&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+  <!-- GSAP loaded in <head> because the intro animation fires as soon as the DOM is ready -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
   <link rel="stylesheet" href="css/works.css">
 </head>
 <body>
 
-  <!-- Noise overlay -->
+  <!-- ==================== NOISE CANVAS ====================
+       A <canvas> filled every frame with random pixel values to produce
+       a live film-grain texture across the whole page.
+       Drawn entirely in JS; opacity is kept very low in CSS (0.03). -->
   <canvas id="noiseCanvas"></canvas>
 
-  <!-- Cursors -->
+  <!-- ==================== CUSTOM CURSORS ====================
+       Three cursor layers stacked on top of each other, all moved by JS:
+
+       1. cursor-dot      — the small white dot (primary cursor replacement)
+       2. scrollCursor    — the "Scroll" text label shown in video fullscreen mode
+       3. cursorScrollRing — a rotating SVG ring with "SCROLL · SCROLL ·" text,
+                             shown on the grid to hint at scroll interaction.
+          Inside the SVG:
+          - circlePath defines the arc that the text follows via <textPath>
+          - ring-dot is a small filled circle that rotates around the ring
+          - ring-text is the circular running text -->
   <div class="cursor-dot" id="cursorDot"></div>
   <div id="scrollCursor">Scroll</div>
   <div class="cursor-scroll-ring" id="cursorScrollRing">
     <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
+        <!-- Circular path used as the baseline for the text -->
         <path id="circlePath" d="M 36,36 m -26,0 a 26,26 0 1,1 52,0 a 26,26 0 1,1 -52,0"/>
       </defs>
+      <!-- Subtle background ring stroke -->
       <circle cx="36" cy="36" r="28" stroke="rgba(240,237,232,0.18)" stroke-width="0.75"/>
+      <!-- Small dot that travels the ring as the SVG rotates via CSS animation -->
       <circle class="ring-dot" cx="36" cy="10" r="2"/>
+      <!-- Repeating SCROLL label that follows the circular path -->
       <text>
         <textPath class="ring-text" href="#circlePath" startOffset="0%">
           SCROLL · SCROLL · SCROLL · SCROLL ·
@@ -33,31 +58,49 @@
     </svg>
   </div>
 
-  <!-- Intro -->
+  <!-- ==================== INTRO SPLASH ====================
+       Full-screen white overlay shown on first load.
+       "PROJECTS." text is animated in by GSAP, then the overlay fades out.
+       After the animation, the element is set to display:none. -->
   <div class="intro-overlay" id="introOverlay">
-    <div class="intro-text" id="introText">The Work</div>
+    <div class="intro-text" id="introText">PROJECTS.</div>
   </div>
 
-  <!-- Edge fades -->
+  <!-- ==================== EDGE FADES ====================
+       Two fixed gradient overlays at the top and bottom of the viewport.
+       They fade the gallery track into the page background, so items
+       appear to smoothly dissolve in and out of view rather than hard-clip. -->
   <div class="edge-fade-top"></div>
   <div class="edge-fade-bottom"></div>
 
-  <!-- Grid header -->
+  <!-- ==================== GRID HEADER ====================
+       Fixed top bar visible in the scrollable gallery view (not fullscreen).
+       Left: back-to-home link.
+       Right: animated project counter (current / total). -->
   <header id="gridHeader">
     <div class="header-left">
+      <!-- Back link navigates to the homepage; cursor:none keeps the custom cursor active -->
       <a href="index.html" style="cursor:none;">
         <span class="back-arrow">&#8592;</span>Back to Home
       </a>
     </div>
     <div class="header-right">
+      <!-- counterMain is updated by JS whenever the active index changes -->
       <div id="counterWrap">
         <div class="counter-main" id="counterMain">001</div>
       </div>
+      <!-- counter-sub shows the total number of projects in the active category -->
       <div class="counter-sub">003</div>
     </div>
   </header>
 
-  <!-- Category Nav — Websites / Sketches / Other -->
+  <!-- ==================== CATEGORY NAV ====================
+       Left-side navigation for switching between content collections:
+       Websites | Sketches | Other
+       Each item has:
+       - cat-tick:  a short horizontal line that extends on hover/active
+       - cat-label: the category name text
+       JS adds/removes the 'active' class to highlight the current category. -->
   <nav id="categoryNav">
     <div class="cat-item active" data-category="websites">
       <div class="cat-tick"></div>
@@ -73,7 +116,9 @@
     </div>
   </nav>
 
-  <!-- Nav arrows -->
+  <!-- ==================== NAV ARROWS ====================
+       Up/down chevron buttons on the right edge of the screen.
+       Each click calls stepBy(-1) or stepBy(1) in JS to move the gallery. -->
   <div id="navArrows">
     <div class="nav-arrow" id="arrowUp">
       <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
@@ -83,72 +128,121 @@
     </div>
   </div>
 
-  <!-- Fullscreen header -->
+  <!-- ==================== FULLSCREEN HEADER ====================
+       Replaces gridHeader when a project is opened fullscreen.
+       btnGrid closes fullscreen and returns to the gallery.
+       fullTitle shows the current project name (hidden via CSS in image/video mode).
+       btnInfo opens the slide-in info panel. -->
   <div id="fullHeader">
     <button class="full-btn" id="btnGrid">&#8592; Grid</button>
     <div id="fullTitle">Project I</div>
     <button class="full-btn" id="btnInfo">Info</button>
   </div>
 
-  <!-- Gallery -->
+  <!-- ==================== GALLERY ====================
+       gallery-wrapper is the fixed viewport container.
+       gallery-track holds all the .video-item cards and is moved
+       vertically by GSAP on wheel events to create the scrolling effect.
+       Cards are built programmatically in JS via buildTrack(). -->
   <div class="gallery-wrapper">
     <div class="gallery-track" id="galleryTrack"></div>
   </div>
 
-  <!-- Progress bar -->
+  <!-- ==================== PROGRESS BAR ====================
+       A 1px-wide vertical bar on the right edge.
+       Its CSS height is updated by JS as a percentage:
+       (currentIndex + 1) / total * 100 -->
   <div class="progress-bar" id="progressBar"></div>
 
-  <!-- Zoom clone -->
+  <!-- ==================== ZOOM CLONE ====================
+       A hidden clone of the active gallery card used during the
+       open-fullscreen expansion animation.
+       zoomCloneInner holds the background image or gradient of the clicked item. -->
   <div id="zoomClone"><div id="zoomCloneInner"></div></div>
 
-  <!-- Category flash label -->
+  <!-- ==================== CATEGORY FLASH LABEL ====================
+       A large centred text label (e.g. "WEBSITES") that flashes onto
+       the screen mid-transition when switching categories.
+       The scrambleText() JS function fills it with glitching characters
+       before resolving to the final category name. -->
   <div id="catFlash"></div>
 
-  <!-- Fullscreen view -->
+  <!-- ==================== FULLSCREEN VIEW ====================
+       Covers the entire viewport when a project is opened.
+       Contains several layered elements:
+
+       fullBg       — the video or portrait image fills this absolutely
+       colorTint    — a colour overlay derived from the thumbnail's dominant colour,
+                      blended with mix-blend-mode:color for a tinted atmosphere
+       videoProgress — thin scrubber bar at the bottom showing video playback position
+       fullMeta     — project number + name displayed in the lower-left (video mode only)
+       scrollHint   — "Tap for sound" / "Double-click to zoom" hint in the lower-right
+       imgTitle     — project title shown at the top-center in sketch/image mode
+       zoomControls — zoom-in and zoom-out buttons (sketch/image mode only) -->
   <div id="fullscreen">
     <div id="fullBg"></div>
     <div id="colorTint"></div>
+
+    <!-- Video scrubber: progressFill width is animated by JS each rAF frame -->
     <div id="videoProgress">
       <div id="videoProgressFill"></div>
     </div>
+
+    <!-- Lower-left project metadata (video mode) -->
     <div id="fullMeta">
       <div class="proj-num" id="fsNum">001 / 003</div>
       <div class="proj-name" id="fsName">Project I</div>
     </div>
+
+    <!-- Lower-right interaction hint (changes text depending on mode) -->
     <div id="scrollHint">
       <div class="scroll-line"></div>
       <span>Tap for sound</span>
     </div>
 
-    <!-- Image title — top center, image mode only -->
+    <!-- Top-center title shown only in image/sketch fullscreen mode -->
     <div id="imgTitle"></div>
 
-    <!-- Zoom controls -->
+    <!-- Zoom buttons — only visible and interactive in image/sketch mode -->
     <div id="zoomControls">
       <button class="zoom-btn" id="zoomInBtn" title="Zoom in">
+        <!-- Plus-inside-magnifier icon -->
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="15.65" y2="15.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
       </button>
       <button class="zoom-btn" id="zoomOutBtn" title="Zoom out">
+        <!-- Minus-inside-magnifier icon -->
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="15.65" y2="15.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
       </button>
     </div>
   </div>
 
-  <!-- Info panel -->
+  <!-- ==================== INFO PANEL ====================
+       Slides in from the right when the user presses "Info" in fullscreen mode.
+       Populated dynamically by JS with data from the COLLECTIONS object.
+
+       infoIndex    — "001 / 003" style index
+       infoTitle    — project name
+       infoDesc     — paragraph description
+       infoTags     — technology/process tags (rendered as pill spans)
+       infoLinksWrap — "View Project" external links (hidden if project has none)
+       info-meta-grid — Year / Client / Category / Duration metadata -->
   <div id="infoPanel">
+    <!-- Close button; triggers closeInfoPanel() via JS -->
     <button id="infoPanelClose">&#10005; Close</button>
+
     <span class="info-index" id="infoIndex">001 / 003</span>
     <div class="info-title" id="infoTitle">Project I</div>
     <div class="info-divider"></div>
     <p class="info-desc" id="infoDesc"></p>
     <div class="info-tags" id="infoTags"></div>
 
-    <!-- Links section -->
+    <!-- Links section — hidden via JS if the project has no external links -->
     <div class="info-links-wrap" id="infoLinksWrap">
       <div class="info-links-label">Links</div>
       <div class="info-links" id="infoLinks"></div>
     </div>
 
+    <!-- 2-column metadata grid -->
     <div class="info-meta-grid">
       <div class="info-meta-item">
         <div class="meta-label">Year</div>
@@ -169,6 +263,7 @@
     </div>
   </div>
 
+  <!-- Main gallery logic — loaded last so all DOM elements exist when the script runs -->
   <script src="js/works.js"></script>
 </body>
 </html>
